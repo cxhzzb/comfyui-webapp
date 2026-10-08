@@ -12,27 +12,164 @@
 
 ---
 
-## ⚠️ 先读这一段：它依赖特定的 ComfyUI 节点
+## 🚀 快速部署
 
-本项目的每个"模式"都对应 `workflows/` 里一份 API 格式工作流，而这些工作流引用了**社区自定义节点**。全新安装的 ComfyUI **无法直接跑通**任何模式——你会看到节点缺失报错。
+目标：从零到能出图，**能自动下的全部自动下**，剩下的会明确告诉你去哪找。
 
-工作流中用到的节点（按用途分组）：
+### 0. 前置条件
 
-| 用途 | 需要的节点来源 |
+| 项目 | 要求 |
 | --- | --- |
-| 视频生成 | MiniMax H3 系列（`MiniMaxH3ImageToVideo`、`MiniMaxH3ReferenceToVideo`、`VAEDecodeAudio` 等） |
-| 歌曲生成 | MiniMax Music 3 系列（`Music3StylePreset`、`MiniMaxMusic3LyricsWorkbench`、`Music3SaveInfo` 等） |
-| 生图 / 图像编辑 | Qwen Image 2.1（`TESpeedQwenImage21`、`TextEncodeQwenImage21`、`QwenSwitchNode`） |
-| 四视图设定图 | Krea2（`Krea2EditModelPatch`、`Krea2EditGroundedEncode`） |
-| 提示词增强 | `TE_H3_Prompt_Enhancer`、`TE_Qwen_Image_2_1_Prompt_Enhancer`、`QwenTE_ModelLoader` 等 |
-| 通用辅助 | `ResolutionSelector`、`ImageResizeKJv2`（KJNodes）、`Seed (rgthree)`（rgthree-comfy）、`ComfyMathExpression`、`PrimitiveFloat/String` |
+| 操作系统 | **Windows**（后端用 Windows API 读 CPU/内存；GPU 走 `nvidia-smi`） |
+| Python | 3.10 以上（代码用了 `X \| None` 类型标注） |
+| ComfyUI | **已安装并能正常启动**（本仓库不包含 ComfyUI 本体） |
+| 磁盘 | **约 140 GB** 给模型，另外给 Python 环境约 2 GB |
+| 网络 | 能访问 GitHub 与 HuggingFace。脚本默认走国内镜像（`gh-proxy.com` / `hf-mirror.com`），可用环境变量 `DEPLOY_NO_PROXY=1` 关掉 |
 
-**这意味着**：这个仓库更像是「一套可运行的工作流 + 前端外壳」的参考实现，而不是装上就能用的通用工具。如果你的节点集与 `workflows/*.json` 不一致，你可以：
+### 1. 装 webapp 本身
 
-1. 直接在 ComfyUI 里搭好工作流，**导出为 API 格式**（勾选 "Export (API)"），替换 `workflows/` 下对应文件；
-2. 再对照 `workflows/modes.json` 修改**注入点**（告诉前端"提示词写进哪个节点、第几个输入"）。
+```bash
+git clone https://github.com/cxhzzb/comfyui-webapp.git
+cd comfyui-webapp
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-`modes.json` 就是前端与工作流之间的契约，改这一个文件就能适配你自己的工作流。详见 [适配自己的工作流](#适配自己的工作流)。
+### 2. 一键部署节点与模型
+
+```bash
+python tools/deploy.py --comfy-root "D:\你的\ComfyUI"
+```
+
+或直接双击 **`setup.bat`**（会顺带装依赖并做最后的校验）。
+
+脚本会依次做三件事，**支持随时中断、重跑续传**：
+
+1. **克隆 8 个自定义节点**到 `<ComfyUI>\custom_nodes\`（已有则跳过）
+2. **下载 20 个模型权重**（约 140 GB）到模型目录，逐个显示进度、失败自动重试、已存在则跳过
+3. 打印**需要你手动准备的清单**（见下方第 3 步）
+
+想先看看它打算干什么，不会动磁盘：
+
+```bash
+python tools/deploy.py --comfy-root "D:\你的\ComfyUI" --dry-run
+```
+
+只想做其中一半：
+
+```bash
+python tools/deploy.py --comfy-root "D:\你的\ComfyUI" --nodes     # 只装节点
+python tools/deploy.py --comfy-root "D:\你的\ComfyUI" --models    # 只下模型
+```
+
+> **模型目录不在 ComfyUI 安装目录下？** 若你把模型放在共享目录（`extra_model_paths`，
+> ComfyUI Desktop 的默认布局就是如此），脚本会自动向上探测同级的 `ComfyUI-Shared\models`。
+> 探测不到时用 `--models-root` 明确指定，可重复传多个：
+> ```bash
+> python tools/deploy.py --comfy-root "D:\ComfyUI" --models-root "E:\ComfyUI-Shared\models"
+> ```
+
+### 3. 补齐两个需要手动获取的模型
+
+脚本会自动下载 20 个，但有 **2 个没有可确认的公开直链**，需要你自己找（不影响其他模式）：
+
+| 文件 | 用途 | 怎么找 |
+| --- | --- | --- |
+| `Krea2-四视图QuadView_krea2_v1.safetensors` | 四视图角色设定图 | 社区微调 LoRA，在 Civitai 等搜索「Krea2 QuadView 四视图」；**只有这一个模式需要** |
+| `Qwen3.5-4B-mmproj-BF16.gguf` | 本地提示词增强的视觉投影 | 在 HuggingFace 搜索「Qwen3.5-4B mmproj」下 BF16 版后重命名；**不用「线下本地」增强模式可跳过** |
+
+放入脚本提示的目标路径即可（清单见 `deploy.manifest.json` 里 `status: "manual"` 的两项，
+含完整说明与目标路径）。
+
+### 4. 校验
+
+```bash
+python tools/deploy.py --comfy-root "D:\你的\ComfyUI" --check
+```
+
+会逐项列出节点与模型是否到位。看到 **「全部就绪」** 就可以进入下一步。
+
+### 5. 设置登录密码并启动
+
+```bash
+copy auth_config.example.json auth_config.json
+copy config.example.json config.json
+```
+
+- 编辑 `auth_config.json`：设置 `auth_user` / `auth_pass` / `admin_pass`，并把 `secret_seq`
+  （管理员页面的隐藏解锁图案）改成**自己的组合**；
+- 编辑 `config.json`：把 `comfyui_root` 改成你的 ComfyUI 安装目录（若模型在共享目录，同时填 `comfy_shared_root`）。
+
+```jsonc
+// config.json
+{
+  "comfyui_root": "D:\\ComfyUI",                 // ComfyUI 安装根
+  "comfy_shared_root": "D:\\ComfyUI-Shared",     // 共享 input/output/models 的根（可选）
+  "karaoke_python": "",                          // 装了 faster-whisper 的解释器（可选）
+  "host": "0.0.0.0",
+  "port": 8800
+}
+```
+
+```jsonc
+// auth_config.json
+{
+  "auth_user": "admin",
+  "auth_pass": "你的强密码",
+  "admin_user": "admin",
+  "admin_pass": "另设一个强密码",
+  "session_secret": "用 python -c \"import secrets;print(secrets.token_hex(16))\" 生成",
+  "secret_seq": ["circle", "circle", "square", "x"]   // 务必改成自己的组合
+}
+```
+
+```bash
+python server.py
+```
+
+或双击 `start_webapp.bat`（端口自动读 `config.json`）。浏览器打开 <http://127.0.0.1:8800> 登录即可。
+
+> 若跳过 `auth_config.json`，首次启动会**自动生成随机密码并打印在控制台**，同时落盘保存。
+> 若跳过 `config.json`，会用通用默认值（`C:\ComfyUI`）启动，并在控制台打印实际生效的配置。
+
+---
+
+## ⚠️ 部署前需要知道的两件事
+
+### 1. 它依赖特定的自定义节点，脚本已覆盖大部分
+
+本项目的每个「模式」都对应 `workflows/` 里一份 API 格式工作流，工作流引用了**社区自定义节点**。`tools/deploy.py` 会把有公开来源的节点自动装好：
+
+| 用途 | 节点来源 |
+| --- | --- |
+| 通用图像 / 种子 | [ComfyUI-KJNodes](https://github.com/kijai/ComfyUI-KJNodes)、[rgthree-comfy](https://github.com/rgthree/rgthree-comfy) |
+| GGUF 加载 | [ComfyUI-GGUF](https://github.com/city96/ComfyUI-GGUF) |
+| 四视图设定图 | [comfyui-krea2edit](https://github.com/lbouaraba/comfyui-krea2edit) |
+| 本地 GGUF 推理 / 提示词增强 | [TE_MAN](https://github.com/tl2012tl/TE_MAN)、[comfyUI-llama-TE](https://github.com/tl2012tl/comfyUI-llama-TE) |
+| Qwen Image 2.1 生图 | [TE-Speed-QwenImage21](https://github.com/tl2012tl/TE-Speed-QwenImage21) |
+| MiniMax H3 加速 | [TE-Speed-MiniMaxH3](https://github.com/tl2012tl/TE-Speed-MiniMaxH3) |
+
+**有 2 个节点包没有可确认的公开仓库**，脚本会明确列出，需你用 **ComfyUI-Manager** 搜索安装：
+
+- 提供 `MiniMaxH3ImageToVideo` / `MiniMaxH3ReferenceToVideo` / `VAEDecodeAudio` 的 **MiniMax H3 视频节点**（Man 里搜 “MiniMax H3”）
+- 提供 `MiniMaxMusic3StylePreset` / `MiniMaxMusic3TextEncode` / `MiniMaxMusic3LyricsWorkbench` 的 **MiniMax Music 3 节点**（Man 里搜 “Music3”）；它同时提供曲风预设目录 `presets/*.txt`
+
+部分节点自带 `requirements.txt`，需要在 **ComfyUI 的 Python 环境**里安装；`deploy.py` 会把这些路径打印出来，不要漏掉。
+
+**如果你的节点集与工作流不一致**，两种做法：
+
+1. 在 ComfyUI 里搭好工作流，**导出 API 格式**（勾选 "Export (API)"），替换 `workflows/` 下对应文件；
+2. 对照 `workflows/modes.json` 修改**注入点**（提示词写进哪个节点、第几个输入）。
+
+`modes.json` 就是前端与工作流之间的契约，改这一个文件即可适配自己的工作流——详见 [适配自己的工作流](#适配自己的工作流)。
+
+### 2. 磁盘与时间成本是真实的
+
+- 模型合计 **约 140 GB**，其中单文件最大 24.5 GB（`qwen3vl_32b_...int8_convrot`）；
+- 首次下载视带宽可能要数小时，**建议先只装一个模式跑通**：例如只下 Qwen 生图所需的 4 个文件，
+  再逐步补齐。做法是先用 `--dry-run` 看清清单，手动注释掉 `deploy.manifest.json` 里暂时不要的条目再执行。
+
 
 ---
 
@@ -92,76 +229,6 @@ cd docs && node shot.mjs
 - **强制本地**：Qwen 生图、音乐、MV 等模式只在本地车道运行（`local_only`）。
 
 修改 `lanes.json` 后需**重启进程**生效（无热重载）。
-
----
-
-## 快速开始
-
-### 1. 前置条件
-
-- **Windows**（后端用 `ctypes.windll` 读 CPU/内存，GPU 走 `nvidia-smi`，目前仅支持 Windows）
-- **Python 3.10+**（代码使用了 `X | None` 类型标注）
-- **已在运行的 ComfyUI**（默认 `http://127.0.0.1:8188`），且已装好上一节列出的自定义节点与模型
-
-### 2. 安装
-
-```bash
-git clone https://github.com/cxhzzb/comfyui-webapp.git
-cd comfyui-webapp
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-### 3. 配置
-
-```bash
-copy config.example.json config.json
-```
-
-编辑 `config.json`，至少把 `comfyui_root` 改成你的 ComfyUI 安装目录：
-
-```jsonc
-{
-  "comfyui_root": "D:\\ComfyUI",                  // ComfyUI 安装根
-  "comfy_shared_root": "D:\\ComfyUI-Shared",      // 共享 input/output/models 的根（可选）
-  "host": "0.0.0.0",
-  "port": 8800
-}
-```
-
-> 没有 `config.json` 也能启动：会用通用默认值（`C:\ComfyUI`），并在控制台打印实际生效的配置。
-
-### 4. 设置登录账号
-
-```bash
-copy auth_config.example.json auth_config.json
-```
-
-填入自己的账号密码，并把 `secret_seq`（管理员页面的隐藏解锁图案）改成自己的组合：
-
-```jsonc
-{
-  "auth_user": "admin",
-  "auth_pass": "你的强密码",
-  "admin_user": "admin",
-  "admin_pass": "你的强密码",
-  "session_secret": "用 python -c \"import secrets;print(secrets.token_hex(16))\" 生成",
-  "secret_seq": ["circle", "circle", "square", "x"]
-}
-```
-
-如果 `auth_config.json` 不存在或字段缺失，**首次启动会自动生成随机密码并打印在控制台**，同时落盘保存。
-
-### 5. 启动
-
-```bash
-python server.py
-```
-
-或双击 `start_webapp.bat`（端口自动读 `config.json`）。
-
-浏览器打开 <http://127.0.0.1:8800> 登录即可。
 
 ---
 
@@ -262,6 +329,9 @@ comfyui-webapp/
 ├── auth_config.example.json   # 账号模板 → 复制为 auth_config.json
 ├── llm_api_config.example.json
 ├── mail_config.example.json
+├── deploy.manifest.json       # 部署清单：需要的节点与模型、下载地址、用途
+├── setup.bat                  # Windows 一键部署（装依赖 + 部署 + 校验）
+├── tools/deploy.py            # 部署脚本（克隆节点、下载模型、校验）
 ├── lanes.json                 # 多后端车道池配置
 ├── models_state.json          # 模型启停名单
 ├── ip_monitor.py              # 可选的公网 IP 变化邮件提醒
@@ -290,17 +360,43 @@ comfyui-webapp/
 
 ## 常见问题
 
-**Q：页面能打开，但生成报"节点缺失"？**
-说明 `workflows/*.json` 引用的自定义节点没装齐，见文首「先读这一段：它依赖特定的 ComfyUI 节点」。
+**Q：部署脚本中途断了 / 下到一半没网了？**
+直接重跑同一条命令即可。已存在的节点与模型会跳过，未完成的 `.part` 文件会**断点续传**。
+
+**Q：模型没有下到 ComfyUI 的 models 目录里？**
+脚本会自动探测安装目录下的 `models` 与上溯几级找到的 `ComfyUI-Shared\models`。
+若你的布局不同，用 `--models-root "你的\models"` 指定（可传多次）。查找时按文件名全树匹配，
+不要求特定子目录名。
+
+**Q：`--check` 说缺模型，但我明明有？**
+先确认它找的目录对不对——`--check` 会把实际使用的每个模型根打印在开头。
+如果模型在别的盘，用 `--models-root` 指出。
+
+**Q：页面能打开，但生成报「节点缺失」？**
+见「部署前需要知道的两件事」第 1 条。重点是那 2 个需用 ComfyUI-Manager 手动安装的
+MiniMax H3 / Music 3 节点包；另外别忘了给带 `requirements.txt` 的节点装依赖。
+
+**Q：只想跑通一个模式，必须下满 140 GB 吗？**
+不必。先用 `--dry-run` 看清单，把 `deploy.manifest.json` 里暂时不需要的条目删掉或注释掉
+（它是一个普通 JSON，`models` 数组里逐项删除即可）再执行。例如只要 Qwen 生图，就保留
+`qwen_image_2.1_*`、`qwen3vl_8b_*`、`qwen3.5_9b_*pe_*` 这几项。
 
 **Q：修改了 `lanes.json` 没生效？**
 车道配置只在进程启动时读取一次，需要重启。
 
-**Q：卡拉OK 对齐提示"对齐环境未安装"？**
+**Q：卡拉OK 对齐提示「对齐环境未安装」？**
 需要一个单独的、装了 `faster-whisper` 的 Python 环境（`pip install -r requirements-karaoke.txt`），然后在 `config.json` 里把 `karaoke_python` 指向它的 `python.exe`。首次运行会从 HuggingFace 下载模型。
 
-**Q：提示词增强/写词不能用？**
-需要配置 `llm_api_config.json`（任何 OpenAI 兼容接口都行，改 `base_url` 即可）。不配置也不影响其他功能。
+**Q：提示词增强 / 写词不能用？**
+需要配置 `llm_api_config.json`（任何 OpenAI 兼容接口都行，改 `base_url` 即可）。不配置也不影响其他功能；若想完全离线，则走「线下本地」模式，需要 GGUF 模型（见部署清单）。
+
+**Q：下载很慢 / 连不上 HuggingFace？**
+脚本默认使用 `hf-mirror.com` 与 `gh-proxy.com` 镜像。想走官方源或自建镜像：
+```bash
+set HF_ENDPOINT=https://huggingface.co     # 官方源
+set GITHUB_PROXY=                          # 不用 GitHub 代理
+set DEPLOY_NO_PROXY=1                      # 完全关闭镜像
+```
 
 **Q：能在 Linux / macOS 上跑吗？**
 后端读 CPU/内存用了 Windows API，目前不可以。欢迎 PR 做跨平台适配。

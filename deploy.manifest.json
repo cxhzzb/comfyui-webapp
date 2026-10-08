@@ -1,0 +1,229 @@
+{
+  "_说明": "部署清单：ComfyUI 自定义节点 + 模型文件。由 tools/deploy.py 读取执行。auto=可自动下载；manual=需自行准备（附搜索关键词）。",
+  "_镜像": {
+    "HF_ENDPOINT": "https://hf-mirror.com",
+    "GITHUB_PROXY": "https://gh-proxy.com/"
+  },
+
+  "nodes": [
+    {
+      "dir": "comfyui-kjnodes",
+      "repo": "https://github.com/kijai/ComfyUI-KJNodes",
+      "provides": ["ImageResizeKJv2", "PreviewAny"],
+      "note": "提供 ImageResizeKJv2 等通用图像节点"
+    },
+    {
+      "dir": "rgthree-comfy",
+      "repo": "https://github.com/rgthree/rgthree-comfy",
+      "provides": ["Seed (rgthree)"],
+      "note": "提供 Seed (rgthree) 种子节点"
+    },
+    {
+      "dir": "ComfyUI-GGUF",
+      "repo": "https://github.com/city96/ComfyUI-GGUF",
+      "provides": ["UnetLoaderGGUF", "CLIPLoaderGGUF"],
+      "note": "GGUF 量化模型加载器"
+    },
+    {
+      "dir": "comfyui-krea2edit",
+      "repo": "https://github.com/lbouaraba/comfyui-krea2edit",
+      "provides": ["Krea2EditModelPatch", "Krea2EditGroundedEncode"],
+      "note": "Krea2 四视图模式必需"
+    },
+    {
+      "dir": "TE_MAN",
+      "repo": "https://github.com/tl2012tl/TE_MAN",
+      "provides": ["ComfyMathExpression"],
+      "note": "TE 系列基础节点"
+    },
+    {
+      "dir": "comfyUI-llama-TE",
+      "repo": "https://github.com/tl2012tl/comfyUI-llama-TE",
+      "provides": ["QwenTE_ModelLoader", "QwenTE_ImageInfer", "TE_prompt_text", "TE_text_display"],
+      "note": "本地 GGUF 大模型推理（提示词增强的“线下本地”模式）"
+    },
+    {
+      "dir": "TE-Speed-QwenImage21",
+      "repo": "https://github.com/tl2012tl/TE-Speed-QwenImage21",
+      "provides": ["TESpeedQwenImage21", "TextEncodeQwenImage21", "QwenImage21Cache", "TE_Qwen_Image_2_1_Prompt_Enhancer"],
+      "note": "Qwen Image 2.1 生图/图像编辑 + 对应提示词增强"
+    },
+    {
+      "dir": "TE-Speed-MiniMaxH3",
+      "repo": "https://github.com/tl2012tl/TE-Speed-MiniMaxH3",
+      "provides": ["TE_H3_Prompt_Enhancer", "MiniMaxH3MemoryEfficientSageAttentionPatch"],
+      "note": "MiniMax H3 加速与提示词增强"
+    },
+    {
+      "dir": "ComfyUI-MiniMax-H3",
+      "repo": "",
+      "provides": ["MiniMaxH3ImageToVideo", "MiniMaxH3ReferenceToVideo", "VAEDecodeAudio", "CreateVideo"],
+      "note": "MiniMax H3 视频节点。上游可能为私有/需授权仓库：请用 ComfyUI-Manager 搜索 “MiniMax H3” 安装，或向模型提供方获取。"
+    },
+    {
+      "dir": "ComfyUI-Music3-Presets",
+      "repo": "",
+      "provides": ["MiniMaxMusic3StylePreset", "MiniMaxMusic3TextEncode", "MiniMaxMusic3SaveInfo", "MiniMaxMusic3LyricsWorkbench", "EmptyMiniMaxMusic3LatentAudio"],
+      "note": "MiniMax Music 3 节点 + 曲风预设。请用 ComfyUI-Manager 搜索 “Music3” 安装；曲风预设放在本目录 presets/*.txt。"
+    }
+  ],
+
+  "models": [
+    {
+      "file": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "target": "models/diffusion_models/Minimax_H3/minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "size_gb": 19.53,
+      "used_by": "UNETLoader（文生视频 / 图生视频 / 首尾帧）",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors"
+    },
+    {
+      "file": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+      "target": "models/diffusion_models/Minimax_H3/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+      "size_gb": 19.53,
+      "used_by": "UNETLoader（多参视频 r2v）",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors"
+    },
+    {
+      "file": "minimax_h3_video_vae_fp16.safetensors",
+      "target": "models/vae/minimax_h3_video_vae_fp16.safetensors",
+      "size_gb": 4.85,
+      "used_by": "VAELoader（视频解码）",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors"
+    },
+    {
+      "file": "minimax_h3_audio_vae_fp32.safetensors",
+      "target": "models/vae/minimax_h3_audio_vae_fp32.safetensors",
+      "size_gb": 0.56,
+      "used_by": "VAELoader（音效解码）",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors"
+    },
+    {
+      "file": "minimax_h3_turbo_v4_step600_ema_pruned_comfyui.safetensors",
+      "target": "models/loras/minimax_h3_turbo_v4_step600_ema_pruned_comfyui.safetensors",
+      "size_gb": 0.58,
+      "used_by": "LoraLoaderModelOnly（少步数加速）",
+      "url": "https://huggingface.co/drbaph/MiniMax-H3-Turbo-Lora-ComfyUI/resolve/main/minimax_h3_turbo_v4_step600_ema_pruned_comfyui.safetensors"
+    },
+    {
+      "file": "minimax_music3_dit_int8_convrot.safetensors",
+      "target": "models/diffusion_models/minimax_music3_dit_int8_convrot.safetensors",
+      "size_gb": 2.33,
+      "used_by": "UNETLoader（歌曲生成）",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/diffusion_models/minimax_music3_dit_int8_convrot.safetensors"
+    },
+    {
+      "file": "minimax_music3_text_encoder_pruned_int8_convrot.safetensors",
+      "target": "models/text_encoders/minimax_music3_text_encoder_pruned_int8_convrot.safetensors",
+      "size_gb": 8.57,
+      "used_by": "CLIPLoader（歌曲生成）",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/text_encoders/minimax_music3_text_encoder_pruned_int8_convrot.safetensors"
+    },
+    {
+      "file": "minimax_music3_dav.safetensors",
+      "target": "models/vae/minimax_music3_dav.safetensors",
+      "size_gb": 0.2,
+      "used_by": "VAELoader（音频解码）",
+      "url": "https://huggingface.co/Comfy-Org/MiniMax-Music-3/resolve/main/vae/minimax_music3_dav.safetensors"
+    },
+    {
+      "file": "qwen_image_2.1_int8_convrot.safetensors",
+      "target": "models/diffusion_models/Qwen/qwen_image_2.1_int8_convrot.safetensors",
+      "size_gb": 6.76,
+      "used_by": "UNETLoader（Qwen 文生图 / 图像编辑）",
+      "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main/diffusion_models/qwen_image_2.1_int8_convrot.safetensors"
+    },
+    {
+      "file": "qwen_image_2.1_vae_bf16.safetensors",
+      "target": "models/vae/qwen_image_2.1_vae_bf16.safetensors",
+      "size_gb": 0.63,
+      "used_by": "VAELoader（Qwen 生图）",
+      "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main/vae/qwen_image_2.1_vae_bf16.safetensors"
+    },
+    {
+      "file": "qwen_image_vae.safetensors",
+      "target": "models/vae/qwen_image_vae.safetensors",
+      "size_gb": 0.24,
+      "used_by": "VAELoader（Krea2 四视图）",
+      "url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors"
+    },
+    {
+      "file": "qwen3vl_8b_int8_convrot.safetensors",
+      "target": "models/text_encoders/qwen3vl_8b_int8_convrot.safetensors",
+      "size_gb": 8.71,
+      "used_by": "CLIPLoader（Qwen 生图文本编码）",
+      "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main/text_encoders/qwen3vl_8b_int8_convrot.safetensors"
+    },
+    {
+      "file": "qwen3vl_4b_fp8_scaled.safetensors",
+      "target": "models/text_encoders/qwen3vl_4b_fp8_scaled.safetensors",
+      "size_gb": 4.88,
+      "used_by": "CLIPLoader（Krea2 四视图）",
+      "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/text_encoders/qwen3vl_4b_fp8_scaled.safetensors"
+    },
+    {
+      "file": "krea2_turbo_fp8_scaled.safetensors",
+      "target": "models/diffusion_models/Krea2/krea2_turbo_fp8_scaled.safetensors",
+      "size_gb": 12.24,
+      "used_by": "UNETLoader（Krea2 四视图）",
+      "url": "https://huggingface.co/Comfy-Org/Krea-2/resolve/main/diffusion_models/krea2_turbo_fp8_scaled.safetensors"
+    },
+    {
+      "file": "qwen3vl_32b_h3_ultra_uncensored_heretic_int8_convrot.safetensors",
+      "target": "models/text_encoders/qwen3vl_32b_h3_ultra_uncensored_heretic_int8_convrot.safetensors",
+      "size_gb": 24.55,
+      "used_by": "CLIPLoader（H3 视频文本编码）",
+      "url": "https://huggingface.co/ethanfel/Qwen3-VL-32B-Ultra-Heretic-H3-ComfyUI-INT8-ConvRot/resolve/main/qwen3vl_32b_h3_ultra_uncensored_heretic_int8_convrot.safetensors"
+    },
+    {
+      "file": "qwen3.5_9b_qwen_image_2.1_pe_t2i.int8_convrot.safetensors",
+      "target": "models/text_encoders/qwen3.5_9b_qwen_image_2.1_pe_t2i.int8_convrot.safetensors",
+      "size_gb": 8.82,
+      "used_by": "TE_Qwen_Image_2_1_Prompt_Enhancer（文生图增强）",
+      "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main/text_encoders/qwen3.5_9b_qwen_image_2.1_pe_t2i.int8_convrot.safetensors"
+    },
+    {
+      "file": "qwen3.5_9b_qwen_image_2.1_pe_i2i.int8_convrot.safetensors",
+      "target": "models/text_encoders/qwen3.5_9b_qwen_image_2.1_pe_i2i.int8_convrot.safetensors",
+      "size_gb": 8.82,
+      "used_by": "TE_Qwen_Image_2_1_Prompt_Enhancer（图像编辑增强）",
+      "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/main/text_encoders/qwen3.5_9b_qwen_image_2.1_pe_i2i.int8_convrot.safetensors"
+    },
+    {
+      "file": "Qwen3.5-4B-Q4_K_M.gguf",
+      "target": "models/LLM/Qwen3.5-4B-Q4_K_M.gguf",
+      "size_gb": 2.55,
+      "used_by": "QwenTE_ModelLoader（本地提示词增强）",
+      "url": "https://huggingface.co/unsloth/Qwen3.5-4B-GGUF/resolve/main/Qwen3.5-4B-Q4_K_M.gguf"
+    },
+    {
+      "file": "Qwen3.5-4B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf",
+      "target": "models/LLM/Q35-4B-U-HauhauCS/Qwen3.5-4B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf",
+      "size_gb": 3.23,
+      "used_by": "TE_Qwen_Image_2_1_Prompt_Enhancer（生图增强备选）",
+      "url": "https://huggingface.co/HauhauCS/Qwen3.5-4B-Uncensored-HauhauCS-Aggressive/resolve/main/Qwen3.5-4B-Uncensored-HauhauCS-Aggressive-Q6_K.gguf"
+    },
+    {
+      "file": "mmproj-Qwen3.5-4B-Uncensored-HauhauCS-Aggressive-BF16.gguf",
+      "target": "models/LLM/Q35-4B-U-HauhauCS/mmproj-Qwen3.5-4B-Uncensored-HauhauCS-Aggressive-BF16.gguf",
+      "size_gb": 0.63,
+      "used_by": "TE_Qwen_Image_2_1_Prompt_Enhancer（视觉投影，随上一条）",
+      "url": "https://huggingface.co/HauhauCS/Qwen3.5-4B-Uncensored-HauhauCS-Aggressive/resolve/main/mmproj-Qwen3.5-4B-Uncensored-HauhauCS-Aggressive-BF16.gguf"
+    },
+    {
+      "file": "Qwen3.5-4B-mmproj-BF16.gguf",
+      "target": "models/LLM/Qwen3.5-4B-mmproj-BF16.gguf",
+      "size_gb": 0.63,
+      "used_by": "QwenTE_ModelLoader（本地增强的视觉投影）",
+      "status": "manual",
+      "note": "本地 GGUF 提示词增强的视觉投影文件。上游多与基础模型同仓提供，文件名各异：可在 HuggingFace 搜索 “Qwen3.5-4B mmproj” 下载 BF16 版本后重命名。仅“线下本地”增强模式需要；不用本地增强可跳过。"
+    },
+    {
+      "file": "Krea2-四视图QuadView_krea2_v1.safetensors",
+      "target": "models/loras/Krea2-功能/Krea2-四视图QuadView_krea2_v1.safetensors",
+      "size_gb": 0.85,
+      "used_by": "LoraLoaderModelOnly（四视图角色设定）",
+      "status": "manual",
+      "note": "四视图模式的 LoRA，为个人/社区微调，无可确认的公开直链。可在 Civitai 或对应社区搜索 “Krea2 QuadView 四视图” 获取后放入该路径。四视图模式需要，其余模式不受影响。"
+    }
+  ]
+}

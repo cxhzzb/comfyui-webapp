@@ -54,6 +54,32 @@ jobs:
           print('server.py 加载成功，路由数:', len(m.app.routes))
           PY
 
+      - name: 部署清单与脚本自检
+        run: |
+          python - <<'PY'
+          import json, sys, pathlib
+          d = json.load(open('deploy.manifest.json', encoding='utf-8'))
+          nodes, models = d['nodes'], d['models']
+          assert nodes and models, '清单为空'
+          # 每个节点必须写清 dir / provides / note；每项模型必须有 target / used_by
+          for n in nodes:
+              assert n.get('dir') and n.get('provides') and n.get('note'), f'节点条目不完整: {n}'
+          for m in models:
+              assert m.get('target') and m.get('used_by'), f'模型条目不完整: {m}'
+              if m.get('status') != 'manual':
+                  assert m.get('url', '').startswith('https://'), f'缺少下载地址: {m["file"]}'
+              else:
+                  assert m.get('note'), f'需手动项必须写 note: {m["file"]}'
+          auto = [m for m in models if m.get('status') != 'manual']
+          manual = [m for m in models if m.get('status') == 'manual']
+          total = sum(m.get('size_gb', 0) for m in auto)
+          print(f'清单合法：节点 {len(nodes)} 个；模型 {len(models)} 个'
+                f'（可自动下载 {len(auto)} 个约 {total:.1f} GB，需手动 {len(manual)} 个）')
+          PY
+          # dry-run 必须能跑通且不因缺文件而失败（用不存在的目录模拟全新环境）
+          python tools/deploy.py --comfy-root "/tmp/fake-comfyui" --dry-run > /dev/null
+          echo "deploy.py --dry-run 通过"
+
       - name: 防止凭据被提交
         run: |
           # 常见密钥形态 + 本仓库历史上出现过的那类真实口令特征
