@@ -37,6 +37,9 @@ mv_tasks/
 *.jpeg
 *.webp
 
+# 例外：README 用的界面截图属于文档资产，需要入库
+!docs/*.png
+
 # ---------- 编辑器 / 系统 ----------
 .vscode/
 .idea/

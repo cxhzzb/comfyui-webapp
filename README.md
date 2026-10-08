@@ -38,8 +38,37 @@
 
 ## 功能
 
-<!-- 截图占位：建议放首页 + 一个生成页 + 管理页共 3 张，宽度 900 左右 -->
-<!-- ![首页](docs/screenshot-home.png) -->
+### 首页：模式卡片
+
+![首页](docs/screenshot-home.png)
+
+### 生成页：素材、提示词、参数与实时进度
+
+![生成页](docs/screenshot-generate.png)
+
+### 手机浏览器同样可用
+
+<img src="docs/screenshot-mobile.png" width="300" alt="手机版首页">
+
+<p><img src="docs/screenshot-login.png" width="700" alt="登录页"></p>
+
+<details>
+<summary>截图是怎么来的（可自行重新生成）</summary>
+
+截图由 `docs/shot.mjs` 通过 Chrome DevTools Protocol 驱动无头浏览器自动完成，登录凭据从本地 `auth_config.json` 读取（该文件不入库）。重新生成：
+
+```bash
+# 1) 起一个开了调试端口的无头 Chrome
+"C:\Program Files\Google\Chrome\Application\chrome.exe" ^
+  --headless=new --remote-debugging-port=9224 --user-data-dir=_shot_profile ^
+  --window-size=1440,900 about:blank
+
+# 2) 确保 webapp 已在 8800 运行，且项目根有 auth_config.json
+cd docs && node shot.mjs
+```
+
+脚本会把车道条里的实例名替换为通用文案后再截图，避免公开本机硬件型号。
+</details>
 
 | 模块 | 说明 |
 | --- | --- |
@@ -247,6 +276,9 @@ comfyui-webapp/
 │   ├── admin.html             # 管理员界面（内联 JS）
 │   ├── secret.js              # 隐藏解锁入口
 │   └── style.css / fun_lines.json
+├── docs/
+│   ├── screenshot-*.png       # README 截图
+│   └── shot.mjs               # 截图脚本（CDP 驱动无头浏览器）
 └── workflows/                 # ComfyUI API 格式工作流 + 模式注入表
     ├── modes.json             # 前端 ↔ 工作流的契约
     ├── t2v.json / i2v.json / fl2v.json / r2v.json
