@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: 语法 / JSON / 凭据检查
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 语法检查（全部 Python 文件可编译）
+        run: python -m compileall -q server.py config.py ip_monitor.py karaoke_align.py
+
+      - name: JSON 合法性（配置模板与工作流）
+        run: |
+          python - <<'PY'
+          import json, glob, sys
+          files = sorted(
+              glob.glob('*.json') + glob.glob('workflows/*.json') + glob.glob('static/*.json')
+          )
+          # 本地真实配置不入库，若出现说明 .gitignore 失效
+          leaked = [f for f in files if f in
+                    ('config.json', 'auth_config.json', 'llm_api_config.json', 'mail_config.json')]
+          if leaked:
+              sys.exit(f'本不该入库的本地配置文件被提交了: {leaked}')
+          for f in files:
+              json.load(open(f, encoding='utf-8'))
+          print(f'{len(files)} 个 JSON 文件全部合法')
+          PY
+
+      - name: 应用可导入（不含启动服务）
+        run: |
+          python - <<'PY'
+          import importlib.util, sys, pathlib
+          # 无 config.json 时应回落到通用默认值，不应抛错
+          spec = importlib.util.spec_from_file_location('srv', 'server.py')
+          m = importlib.util.module_from_spec(spec)
+          sys.modules['srv'] = m
+          spec.loader.exec_module(m)
+          print('server.py 加载成功，路由数:', len(m.app.routes))
+          PY
+
+      - name: 防止凭据被提交
+        run: |
+          # 常见密钥形态 + 本仓库历史上出现过的那类真实口令特征
+          if grep -rInE '(sk-[A-Za-z0-9]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)' \
+               --include='*.py' --include='*.js' --include='*.html' --include='*.json' --include='*.md' \
+               --exclude='*.example.json' . ; then
+            echo "::error::检测到疑似密钥内容，请移除后再提交"
+            exit 1
+          fi
+          echo "未检测到疑似密钥"

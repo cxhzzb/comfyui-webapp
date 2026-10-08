@@ -1,5 +1,8 @@
 # ComfyUI Webapp
 
+[![CI](https://github.com/cxhzzb/comfyui-webapp/actions/workflows/ci.yml/badge.svg)](https://github.com/cxhzzb/comfyui-webapp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 把 ComfyUI 的工作流封装成**卡片式网页界面**：不用记节点、不用拖连线，打开浏览器就能生成视频、图片和歌曲，并统一管理任务、模型与文件。
 
 项目是一个**单文件 FastAPI 后端**（`server.py`）+ **纯静态前端**（`static/`，无构建步骤）。它不替代 ComfyUI，而是站在 ComfyUI 前面：所有生成都通过 ComfyUI 的 HTTP/WebSocket API 完成。
