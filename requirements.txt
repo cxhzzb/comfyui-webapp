@@ -1,0 +1,8 @@
+# 基础依赖（webapp 主程序 server.py 所需）
+fastapi>=0.110,<1.0
+uvicorn>=0.27
+requests>=2.31
+pydantic>=2.0
+websocket-client>=1.7
+imageio-ffmpeg>=0.4.9
+python-multipart>=0.0.9

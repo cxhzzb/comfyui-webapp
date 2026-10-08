@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HorseDance 1.0</title>
+<link rel="stylesheet" href="/static/style.css?v=20260907e">
+</head>
+<body>
+  <div class="bg-deco" aria-hidden="true">
+    <span class="ring r1"></span>
+    <span class="ring r2"></span>
+    <span class="ring r3"></span>
+    <span class="accent-line"></span>
+  </div>
+  <div class="home">
+    <header class="topbar">
+      <h1>HorseDance<span class="brand-ver">1.0</span></h1>
+      <p class="subtitle">选择生成模式</p>
+      <div class="secret-pad secret-pad-home" id="secret-pad">
+        <button type="button" class="secret-btn" data-key="triangle" aria-label="三角形">△</button>
+        <button type="button" class="secret-btn" data-key="x" aria-label="X形">✕</button>
+        <button type="button" class="secret-btn" data-key="square" aria-label="正方形">□</button>
+        <button type="button" class="secret-btn" data-key="circle" aria-label="圆形">◯</button>
+      </div>
+    </header>
+    <main class="cards" id="cards">
+      <p class="loading">加载模式中…</p>
+    </main>
+  </div>
+  <script>
+    fetch('/api/modes')
+      .then(r => r.json())
+      .then(data => {
+        const box = document.getElementById('cards');
+        box.innerHTML = '';
+        for (const m of data.modes) {
+          const a = document.createElement('a');
+          a.className = 'card';
+          a.href = m.id === 'music'
+            ? '/static/music.html'
+            : (m.id === 'mv' ? '/static/mv.html'
+            : (m.id === 'hypit' ? '/static/hypit.html' : '/static/mode.html?m=' + encodeURIComponent(m.id)));
+          const kindLabel = m.kind === 'video' ? '🎬 视频' : (m.kind === 'music' ? '🎵 音乐' : (m.kind === 'mv' ? '🎥 MV' : (m.kind === 'hypit' ? '🎞️ 出片' : '🖼️ 图片')));
+          a.innerHTML =
+            '<div class="card-kind">' + kindLabel + '</div>' +
+            '<h2>' + m.name + '</h2>' +
+            '<p>' + m.description + '</p>';
+          box.appendChild(a);
+        }
+      })
+      .catch(err => {
+        document.getElementById('cards').innerHTML =
+          '<p class="error">无法加载模式配置：' + err.message + '</p>';
+      });
+  </script>
+<script src="/static/secret.js?v=20260813i"></script>
+</body>
+</html>

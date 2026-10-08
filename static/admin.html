@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理员界面</title>
+<style>
+  :root {
+    --bg: #0a0a0c;
+    --glass: rgba(255, 255, 255, .035);
+    --glass-strong: rgba(255, 255, 255, .05);
+    --border: rgba(255, 255, 255, .09);
+    --border-hi: rgba(255, 255, 255, .18);
+    --text: #e8e9ec;
+    --text-dim: #8b8f99;
+    --accent: #86efac;
+    --accent-hi: #a7f3d0;
+    --danger: #ff6b62;
+    --ok: #4fc38a;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  a { color: var(--text-dim); text-decoration: none; transition: color .15s; }
+  a:hover { color: var(--accent-hi); }
+  button { font-family: inherit; }
+  .bg-deco { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+  .bg-deco .ring { position: absolute; border: 2px solid rgba(255,255,255,.05); border-radius: 50%; }
+  .bg-deco .r1 { width: 480px; height: 480px; right: -100px; top: 8%; }
+  .bg-deco .r2 { width: 300px; height: 300px; right: 160px; top: 30%; }
+  .bg-deco .r3 { width: 200px; height: 200px; left: -80px; bottom: 10%; }
+  .bg-deco .accent-line {
+    position: absolute; left: 0; right: 0; top: 58%; height: 2px;
+    background: linear-gradient(90deg, rgba(134,239,172,0) 0%, rgba(134,239,172,.8) 35%, rgba(134,239,172,.8) 100%);
+    opacity: .6;
+  }
+  .topbar {
+    position: relative; z-index: 1;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--glass);
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  }
+  .topbar h1 { font-size: 17px; font-weight: 600; letter-spacing: .18em; }
+  .topbar .right { display: flex; align-items: center; gap: 16px; }
+  .nav-link { font-size: 13px; }
+  .btn-logout {
+    padding: 7px 14px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--border); background: transparent; color: var(--text-dim);
+    font-size: 13px; transition: all .15s;
+  }
+  .btn-logout:hover { color: var(--danger); border-color: var(--danger); }
+  .fm-entry { color: var(--text-dim); }
+  .fm-entry:hover { color: var(--accent-hi) !important; border-color: var(--accent) !important; }
+  .page {
+    position: relative; z-index: 1;
+    flex: 1; overflow-y: auto;
+    padding: 24px;
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+  }
+  .card {
+    width: 100%; max-width: 720px;
+    padding: 20px 24px;
+    background: var(--glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(14px) saturate(1.2);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  }
+  .card h2 { font-size: 18px; letter-spacing: .1em; margin-bottom: 4px; }
+  .card h3 { font-size: 14px; letter-spacing: .1em; margin-bottom: 14px; }
+  .card .sub { color: var(--text-dim); font-size: 12px; letter-spacing: .18em; margin-bottom: 20px; }
+  .card label { display: block; font-size: 12px; color: #aab0c0; margin: 14px 0 6px; }
+  .card input[type=text], .card input[type=password], .card select {
+    width: 100%; padding: 11px 12px; border-radius: 9px;
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
+    color: var(--text); font-size: 15px; outline: none;
+  }
+  .card input:focus, .card select:focus { border-color: var(--accent); }
+  .card button[type=submit] {
+    width: 100%; margin-top: 24px; padding: 12px; border: none; border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent-hi), var(--accent)); color: #0a0a0c;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+  }
+  .card button[type=submit]:hover { box-shadow: 0 4px 18px rgba(134,239,172,.25); }
+  .err { color: var(--danger); font-size: 13px; margin-top: 14px; min-height: 18px; }
+  .gate { width: 100%; max-width: 340px; margin-top: 8vh; }
+  .kv { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .kv li { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+  .kv li span { color: var(--text-dim); }
+  .kv li b { font-weight: 600; }
+  .kv li b.ok { color: var(--accent); }
+  .kv li b.bad { color: var(--danger); }
+  .perf { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .perf-row { display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .perf-row > span { width: 52px; color: var(--text-dim); flex: 0 0 auto; }
+  .perf-bar { flex: 1; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, .07); overflow: hidden; }
+  .perf-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-hi)); transition: width .5s; }
+  .perf-fill.warn { background: linear-gradient(90deg, #fbbf24, #f59e0b); }
+  .perf-fill.bad { background: linear-gradient(90deg, var(--danger), #ff8a80); }
+  .perf-row b { min-width: 128px; text-align: right; font-weight: 600; white-space: nowrap; flex: 0 0 auto; }
+  .perf-gpu-name { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+  .perf-free-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .perf-free-row .pf-msg { font-size: 12px; color: var(--text-dim); }
+  .hidden { display: none !important; }
+
+  /* ---------- 模型管理 ---------- */
+  .mt-card { max-width: 860px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab {
+    padding: 8px 16px; border-radius: 999px; cursor: pointer; font-size: 13px;
+    border: 1px solid var(--border); background: transparent; color: var(--text-dim);
+    transition: all .15s;
+  }
+  .tab:hover { color: var(--accent-hi); border-color: var(--border-hi); }
+  .tab.active { color: #0a0a0c; background: linear-gradient(135deg, var(--accent-hi), var(--accent)); border-color: transparent; font-weight: 600; }
+  .wf-tab { border-style: dashed; border-color: rgba(134,239,172,.4); color: var(--accent-hi); margin-left: 8px; }
+  .wf-tab:hover { border-color: var(--accent); background: rgba(134,239,172,.08); }
+  .mt-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .mt-head h3 { margin: 0; }
+  .mt-free { font-size: 12px; color: var(--text-dim); }
+  .mt-refresh { margin-left: auto; padding: 6px 12px; border-radius: 999px; cursor: pointer; font-size: 12px;
+    border: 1px solid var(--border); background: transparent; color: var(--text-dim); }
+  .mt-refresh:hover { color: var(--accent-hi); border-color: var(--border-hi); }
+  .upload-box { border: 1px dashed var(--border-hi); border-radius: 10px; padding: 14px; margin-bottom: 14px; background: var(--glass-strong); }
+  .upload-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .upload-row .file-btn {
+    padding: 9px 14px; border-radius: 9px; cursor: pointer; font-size: 13px;
+    background: rgba(134,239,172,.12); color: var(--accent-hi); border: 1px solid rgba(134,239,172,.35);
+  }
+  .upload-row .file-name { font-size: 13px; color: var(--text); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .upload-row select, .upload-row input[type=text] {
+    padding: 8px 10px; border-radius: 8px; font-size: 13px;
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: var(--text); outline: none;
+  }
+  .upload-row .ov { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-dim); }
+  .upload-row .ov input { accent-color: var(--accent); }
+  .upload-row .up-btn {
+    padding: 9px 18px; border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 600;
+    background: linear-gradient(135deg, var(--accent-hi), var(--accent)); color: #0a0a0c; border: none;
+  }
+  .upload-row .up-btn:disabled { opacity: .5; cursor: not-allowed; }
+  .up-status { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+  .up-bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,.06); margin-top: 8px; overflow: hidden; display: none; }
+  .up-bar .fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent-hi)); transition: width .2s; }
+  .up-bar.show { display: block; }
+  .mt-list { max-height: 380px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; }
+  .mt-row {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px; font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .mt-row:last-child { border-bottom: none; }
+  .mt-row .fname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mt-row .fname .sub { color: var(--text-dim); }
+  .mt-row .fmeta { color: var(--text-dim); font-size: 12px; white-space: nowrap; }
+  .mt-row .fdisabled .fname { opacity: .45; text-decoration: line-through; }
+  .mt-toggle { position: relative; width: 36px; height: 20px; flex: 0 0 auto; cursor: pointer; }
+  .mt-toggle input { display: none; }
+  .mt-toggle .track { position: absolute; inset: 0; border-radius: 999px; background: rgba(255,255,255,.12); transition: background .15s; }
+  .mt-toggle .knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .15s; }
+  .mt-toggle input:checked + .track { background: var(--accent); }
+  .mt-toggle input:checked ~ .knob { left: 18px; }
+  .mt-del {
+    padding: 5px 10px; border-radius: 7px; cursor: pointer; font-size: 12px; flex: 0 0 auto;
+    border: 1px solid rgba(255,107,98,.4); background: transparent; color: var(--danger);
+  }
+  .mt-del:hover { background: rgba(255,107,98,.12); }
+  .mt-empty { color: var(--text-dim); font-size: 13px; padding: 16px; text-align: center; }
+  .check-box { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; font-size: 13px; background: var(--glass-strong); }
+  .check-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+  .check-title { font-weight: 600; letter-spacing: .08em; }
+  .check-close { padding: 4px 12px; border-radius: 999px; cursor: pointer; font-size: 12px;
+    border: 1px solid var(--border); background: transparent; color: var(--text-dim); }
+  .check-close:hover { color: var(--accent-hi); border-color: var(--border-hi); }
+  .check-loading { color: var(--text-dim); font-size: 13px; }
+  .check-row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; flex-wrap: wrap; }
+  .check-row span { color: var(--text-dim); }
+  .check-warns { margin-top: 8px; color: var(--danger); line-height: 1.7; }
+  .mt-roots { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--text-dim); margin-bottom: 10px; }
+  .mt-roots a { color: var(--accent-hi); cursor: pointer; margin-left: 4px; text-decoration: underline; }
+  /* ---------- 文件管理 ---------- */
+  .fm-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .fm-crumb { font-size: 13px; color: var(--text-dim); display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+  .fm-crumb a { color: var(--accent-hi); cursor: pointer; }
+  .fm-crumb .sep { opacity: .5; }
+  .fm-row-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+  .fm-act { padding: 4px 9px; border-radius: 6px; cursor: pointer; font-size: 12px;
+    border: 1px solid var(--border); background: transparent; color: var(--text-dim); }
+  .fm-act:hover { color: var(--accent-hi); border-color: var(--border-hi); }
+  .fm-act.danger { color: var(--danger); border-color: rgba(255,107,98,.4); }
+  .fm-act.danger:hover { background: rgba(255,107,98,.12); }
+  .fm-icon { width: 22px; text-align: center; flex: 0 0 auto; }
+  .fm-dir-row { cursor: pointer; }
+  .modal { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,.72);
+    display: flex; align-items: center; justify-content: center; padding: 20px; }
+  #fm-window { z-index: 9000; } /* 文件管理窗口在预览/复制等小弹窗之下 */
+  .modal-box { background: #121216; border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px; max-width: 640px; width: 100%; max-height: 82vh; overflow: auto; }
+  .modal-box h4 { margin-bottom: 12px; letter-spacing: .05em; word-break: break-all; }
+  .modal-box img, .modal-box video { max-width: 100%; max-height: 60vh; border-radius: 8px; background: #000; display: block; margin: 0 auto; }
+  .modal-box .dlg-row { margin: 10px 0; }
+  .modal-box .dlg-row label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+  .modal-box .dlg-row input, .modal-box .dlg-row select {
+    width: 100%; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--border);
+    background: rgba(255,255,255,.04); color: var(--text); font-size: 14px; outline: none;
+  }
+  .modal-box .dlg-row input:focus, .modal-box .dlg-row select:focus { border-color: var(--accent); }
+  .modal-box .dlg-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; }
+  .modal-box .dlg-btns button { padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  .modal-box .dlg-btns .ok { background: linear-gradient(135deg, var(--accent-hi), var(--accent)); color: #0a0a0c; border: none; font-weight: 600; }
+  .modal-box .dlg-btns .cancel { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+  .fm-window-box {
+    background: #121216; border: 1px solid var(--border); border-radius: 14px;
+    max-width: 900px; width: 100%; max-height: 88vh;
+    display: flex; flex-direction: column; padding: 18px 20px; overflow: hidden;
+  }
+  .fm-window-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+  .fm-window-head h3 { font-size: 15px; letter-spacing: .1em; }
+  .fm-window-box .tabs { margin-bottom: 10px; }
+  .fm-window-box .mt-list { max-height: 46vh; }
+  .fm-window-box .trash-list { max-height: 140px; }
+  .trash-box { margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; }
+  .trash-head { display: flex; align-items: center; gap: 10px; }
+  .trash-head .t-btn { padding: 6px 12px; border-radius: 999px; cursor: pointer; font-size: 12px;
+    border: 1px solid var(--border); background: transparent; color: var(--text-dim); }
+  .trash-head .t-btn:hover { color: var(--accent-hi); }
+  .trash-head .t-clear { color: var(--danger); border-color: rgba(255,107,98,.4); }
+  .trash-list { margin-top: 10px; max-height: 180px; overflow-y: auto; }
+  .trash-row { display: flex; align-items: center; gap: 10px; padding: 6px 8px; font-size: 12px; border-bottom: 1px solid var(--border); }
+  .trash-row .fname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-dim); }
+  .trash-row .restore-btn { padding: 4px 9px; border-radius: 6px; cursor: pointer; font-size: 12px;
+    border: 1px solid rgba(134,239,172,.35); background: transparent; color: var(--accent-hi); }
+  @media (max-width: 899px) {
+    body { overflow: auto; }
+    .topbar { padding: 14px 16px; }
+    .page { padding: 16px 12px; }
+    .card { padding: 16px; }
+    .upload-row { flex-direction: column; align-items: stretch; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg-deco" aria-hidden="true">
+    <span class="ring r1"></span>
+    <span class="ring r2"></span>
+    <span class="ring r3"></span>
+    <span class="accent-line"></span>
+  </div>
+
+  <header class="topbar">
+    <h1>⚙ 管理员界面</h1>
+    <div class="right">
+      <a class="nav-link" href="/">← 返回首页</a>
+      <button class="btn-logout fm-entry" id="btn-fm-input" hidden>📂 输入文件</button>
+      <button class="btn-logout fm-entry" id="btn-fm-output" hidden>📂 输出文件</button>
+      <button class="btn-logout" id="btn-logout" hidden>退出登录</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <!-- 登录门控 -->
+    <div id="gate" class="gate hidden">
+      <form class="card" id="login-form">
+        <h2>管理员登录</h2>
+        <p class="sub">管理员专用 · 请登录</p>
+        <label>用户名</label>
+        <input name="username" autocomplete="username" required autofocus>
+        <label>密码</label>
+        <input name="password" type="password" autocomplete="current-password" required>
+        <div class="err" id="login-err"></div>
+        <button type="submit">登 录</button>
+      </form>
+    </div>
+
+    <!-- 管理面板 -->
+    <div id="panel" class="hidden">
+      <section class="card">
+        <h3>系统状态</h3>
+        <ul class="kv">
+          <li><span>ComfyUI 服务</span><b id="st-comfy">…</b></li>
+          <li><span>服务器时间</span><b id="st-time">…</b></li>
+          <li><span>版本</span><b id="st-ver">…</b></li>
+        </ul>
+        <div class="perf">
+          <div class="perf-row"><span>CPU</span><div class="perf-bar"><div class="perf-fill" id="perf-cpu"></div></div><b id="perf-cpu-t">--</b></div>
+          <div class="perf-row"><span>内存</span><div class="perf-bar"><div class="perf-fill" id="perf-mem"></div></div><b id="perf-mem-t">--</b></div>
+          <div class="perf-row"><span>GPU</span><div class="perf-bar"><div class="perf-fill" id="perf-gpu"></div></div><b id="perf-gpu-t">--</b></div>
+          <div class="perf-row"><span>显存</span><div class="perf-bar"><div class="perf-fill" id="perf-vram"></div></div><b id="perf-vram-t">--</b></div>
+          <div class="perf-gpu-name" id="perf-gpu-name"></div>
+          <div class="perf-free-row">
+            <button class="perf-free-btn" id="perf-free">♻️ 释放内存/显存</button>
+            <span class="pf-msg" id="perf-free-msg"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="card mt-card">
+        <h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">模型管理
+          <span style="font-weight:400;color:var(--text-dim);font-size:12px;letter-spacing:.05em">上传新模型自动进入生成下拉框（无需改代码/重启）</span>
+          <button class="mt-refresh" id="mt-check" style="margin-left:auto">🔍 手动检查</button>
+        </h3>
+        <div class="check-box hidden" id="mt-check-result"></div>
+        <div class="tabs">
+          <button class="tab active" data-cat="unet">🎬 主模型 (UNET)</button>
+          <button class="tab" data-cat="clip">🧠 CLIP</button>
+          <button class="tab" data-cat="lora">🧩 LoRA</button>
+          <button class="tab wf-tab" data-wf="1">📂 工作流</button>
+        </div>
+        <div id="mt-pane" data-cat="unet">
+          <div class="mt-head">
+            <h3 id="mt-label">主模型 (UNET)</h3>
+            <span class="mt-free" id="mt-free"></span>
+            <button class="mt-refresh" id="mt-open">📂 打开文件夹</button>
+            <button class="mt-refresh" id="mt-refresh">↻ 刷新</button>
+          </div>
+          <div class="mt-roots" id="mt-roots"></div>
+          <div class="upload-box">
+            <div class="upload-row">
+              <button class="file-btn" id="mt-file-btn">选择文件…</button>
+              <input type="file" id="mt-file" hidden>
+              <span class="file-name" id="mt-file-name">未选择文件</span>
+            </div>
+            <div class="upload-row" style="margin-top:10px">
+              <select id="mt-sub" style="max-width:220px"></select>
+              <input type="text" id="mt-sub-new" placeholder="新子目录名（可空）" style="max-width:160px">
+              <label class="ov"><input type="checkbox" id="mt-ov">覆盖同名（旧文件进回收站）</label>
+              <button class="up-btn" id="mt-upload">上传</button>
+            </div>
+            <div class="up-bar" id="mt-bar"><div class="fill" id="mt-bar-fill"></div></div>
+            <div class="up-status" id="mt-status"></div>
+          </div>
+          <div class="mt-list" id="mt-list"></div>
+          <div class="trash-box">
+            <div class="trash-head">
+              <span style="font-size:13px;color:var(--text-dim)">回收站（可恢复）</span>
+              <button class="t-btn" id="mt-trash-load">显示回收站</button>
+              <button class="t-btn t-clear" id="mt-trash-clear">清空回收站</button>
+            </div>
+            <div class="trash-list hidden" id="mt-trash-list"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- 通用弹窗（预览/复制/重命名/新建） -->
+  <div class="modal hidden" id="fm-modal">
+    <div class="modal-box" id="fm-modal-box"></div>
+  </div>
+
+  <!-- 文件管理独立窗口 -->
+  <div class="modal hidden" id="fm-window">
+    <div class="fm-window-box">
+      <div class="fm-window-head">
+        <h3>📁 文件管理 <span style="font-weight:400;color:var(--text-dim);font-size:12px;letter-spacing:.05em">上传 / 下载 / 复制 / 重命名 / 删除（进回收站可恢复）</span></h3>
+        <button class="fm-act" id="fm-window-close">✕ 关闭</button>
+      </div>
+      <div class="tabs">
+        <button class="tab active" data-fmroot="input">输入文件</button>
+        <button class="tab" data-fmroot="output">输出文件</button>
+        <button class="tab" data-fmroot="workflow">工作流</button>
+      </div>
+      <div class="fm-head">
+        <span class="fm-crumb" id="fm-crumb"></span>
+        <span class="mt-free" id="fm-free"></span>
+        <button class="mt-refresh" id="fm-upload-btn">⬆ 上传</button>
+        <button class="mt-refresh" id="fm-mkdir">+ 新建文件夹</button>
+        <button class="mt-refresh" id="fm-refresh">↻ 刷新</button>
+      </div>
+      <input type="file" id="fm-file" hidden>
+      <div class="up-status" id="fm-status"></div>
+      <div class="mt-list" id="fm-list"></div>
+      <div class="trash-box">
+        <div class="trash-head">
+          <span style="font-size:13px;color:var(--text-dim)">文件回收站（可恢复）</span>
+          <button class="t-btn" id="fm-trash-load">显示回收站</button>
+          <button class="t-btn t-clear" id="fm-trash-clear">清空回收站</button>
+        </div>
+        <div class="trash-list hidden" id="fm-trash-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CATS = ['unet', 'clip', 'lora'];
+    const CAT_LABEL = { unet: '主模型 (UNET)', clip: 'CLIP', lora: 'LoRA' };
+    let currentCat = 'unet';
+    let modelData = null;
+
+    // ---------- 鉴权与系统状态 ----------
+    async function checkAuth() {
+      try {
+        const r = await fetch('/api/admin/check');
+        return r.ok && (await r.json()).ok === true;
+      } catch (e) { return false; }
+    }
+    async function loadStatus() {
+      try {
+        const r = await fetch('/api/admin/status');
+        if (r.status === 401) { await init(); return; }
+        const d = await r.json();
+        const c = document.getElementById('st-comfy');
+        c.textContent = d.comfy_up ? '✅ 在线' : '❌ 离线';
+        c.className = d.comfy_up ? 'ok' : 'bad';
+        document.getElementById('st-time').textContent = d.time;
+        document.getElementById('st-ver').textContent = d.version;
+      } catch (e) {}
+    }
+    async function init() {
+      const ok = await checkAuth();
+      document.getElementById('gate').classList.toggle('hidden', ok);
+      document.getElementById('panel').classList.toggle('hidden', !ok);
+      document.getElementById('btn-logout').hidden = !ok;
+      document.getElementById('btn-fm-input').hidden = !ok;
+      document.getElementById('btn-fm-output').hidden = !ok;
+      if (ok) {
+        loadStatus();
+        loadCat(currentCat);
+        loadPerf();
+        setInterval(loadPerf, 5000); // 硬件状态每 5 秒刷新
+      }
+    }
+
+    // ---------- 硬件状态（CPU/内存/GPU/显存） ----------
+    function perfColor(p) {
+      return p == null ? '' : (p >= 90 ? 'bad' : (p >= 70 ? 'warn' : ''));
+    }
+    async function loadPerf() {
+      try {
+        const r = await fetch('/api/admin/perf');
+        if (r.status === 401) return;
+        const d = await r.json();
+        const cpu = d.cpu;
+        document.getElementById('perf-cpu').style.width = (cpu == null ? 0 : cpu) + '%';
+        document.getElementById('perf-cpu').className = 'perf-fill ' + perfColor(cpu);
+        document.getElementById('perf-cpu-t').textContent = cpu == null ? '--' : cpu + '%';
+        const memP = d.mem ? d.mem.percent : null;
+        document.getElementById('perf-mem').style.width = (memP == null ? 0 : memP) + '%';
+        document.getElementById('perf-mem').className = 'perf-fill ' + perfColor(memP);
+        document.getElementById('perf-mem-t').textContent = d.mem ? d.mem.used_gb + ' / ' + d.mem.total_gb + ' GB' : '--';
+        const gpu = d.gpu;
+        const gpuU = gpu ? gpu.util : null;
+        document.getElementById('perf-gpu').style.width = (gpuU == null ? 0 : gpuU) + '%';
+        document.getElementById('perf-gpu').className = 'perf-fill ' + perfColor(gpuU);
+        document.getElementById('perf-gpu-t').textContent = gpuU == null ? '--' : gpuU + '%';
+        const vramP = (gpu && gpu.vram_total_gb) ? (gpu.vram_used_gb / gpu.vram_total_gb * 100) : null;
+        document.getElementById('perf-vram').style.width = (vramP == null ? 0 : vramP) + '%';
+        document.getElementById('perf-vram').className = 'perf-fill ' + perfColor(vramP);
+        document.getElementById('perf-vram-t').textContent = gpu ? gpu.vram_used_gb + ' / ' + gpu.vram_total_gb + ' GB' : '--';
+        document.getElementById('perf-gpu-name').textContent = gpu ? 'GPU：' + gpu.name : '';
+      } catch (e) {}
+    }
+
+    document.getElementById('perf-free').addEventListener('click', async () => {
+      const btn = document.getElementById('perf-free');
+      const msg = document.getElementById('perf-free-msg');
+      btn.disabled = true;
+      btn.textContent = '⏳ 释放中…';
+      try {
+        const r = await fetch('/api/admin/free', { method: 'POST' });
+        const d = await r.json();
+        loadPerf();
+        msg.textContent = d.message || (d.busy ? '有任务生成中' : '已释放');
+      } catch (e) {
+        msg.textContent = '释放失败：' + e.message;
+      }
+      btn.disabled = false;
+      btn.textContent = '♻️ 释放内存/显存';
+    });
+
+    // ---------- 工具 ----------
+    function fmtSize(b) {
+      if (b == null) return '-';
+      if (b >= 1e9) return (b / 1e9).toFixed(2) + ' GB';
+      if (b >= 1e6) return (b / 1e6).toFixed(1) + ' MB';
+      if (b >= 1e3) return (b / 1e3).toFixed(1) + ' KB';
+      return b + ' B';
+    }
+    function fmtTime(t) {
+      if (!t) return '';
+      const d = new Date(t * 1000);
+      const p = (n) => String(n).padStart(2, '0');
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+    function escapeHtml(t) {
+      const d = document.createElement('div');
+      d.textContent = t;
+      return d.innerHTML;
+    }
+    async function api(url, opts) {
+      const r = await fetch(url, opts);
+      if (r.status === 401) { location.reload(); throw new Error('未登录'); }
+      if (!r.ok) {
+        let msg = 'HTTP ' + r.status;
+        try { msg = (await r.json()).detail || msg; } catch (e) {}
+        throw new Error(msg);
+      }
+      return r.json();
+    }
+
+    // ---------- 模型列表 ----------
+    async function loadCat(cat) {
+      currentCat = cat;
+      document.querySelectorAll('.tab[data-cat]').forEach((b) => b.classList.toggle('active', b.dataset.cat === cat));
+      document.getElementById('mt-label').textContent = CAT_LABEL[cat];
+      const st = document.getElementById('mt-status');
+      const list = document.getElementById('mt-list');
+      list.innerHTML = '<div class="mt-empty">加载中…</div>';
+      try {
+        const d = await api('/api/admin/models?cat=' + cat);
+        modelData = d;
+        document.getElementById('mt-free').textContent = d.free_gb != null ? '磁盘剩余 ' + d.free_gb + ' GB' : '';
+        renderSubfolders(d.files);
+        renderFiles(d.files);
+        renderRoots(d.roots);
+        st.textContent = '';
+      } catch (e) {
+        list.innerHTML = '<div class="mt-empty">加载失败：' + escapeHtml(e.message) + '</div>';
+      }
+    }
+    function renderRoots(roots) {
+      const box = document.getElementById('mt-roots');
+      box.innerHTML = '';
+      if (!roots || !roots.length) { box.classList.add('hidden'); return; }
+      box.classList.remove('hidden');
+      for (const r of roots) {
+        const span = document.createElement('span');
+        span.className = 'mt-root';
+        span.textContent = '目录：' + r;
+        const a = document.createElement('a');
+        a.textContent = '打开';
+        a.addEventListener('click', () => openFolder(currentCat, r));
+        span.appendChild(a);
+        box.appendChild(span);
+      }
+    }
+    function renderSubfolders(files) {
+      const sel = document.getElementById('mt-sub');
+      sel.innerHTML = '';
+      const dirs = new Set();
+      for (const f of files) {
+        const i = f.name.lastIndexOf('\\');
+        if (i > 0) dirs.add(f.name.slice(0, i));
+      }
+      const opts = [['', '根目录']].concat([...dirs].sort().map((x) => [x, x]));
+      for (const [v, t] of opts) {
+        const o = document.createElement('option');
+        o.value = v; o.textContent = t;
+        sel.appendChild(o);
+      }
+    }
+    function renderFiles(files) {
+      const list = document.getElementById('mt-list');
+      list.innerHTML = '';
+      if (!files.length) { list.innerHTML = '<div class="mt-empty">暂无模型文件</div>'; return; }
+      for (const f of files) {
+        const row = document.createElement('div');
+        row.className = 'mt-row' + (f.enabled ? '' : ' fdisabled');
+        const name = document.createElement('div');
+        name.className = 'fname';
+        name.title = f.name + '  @ ' + f.root;
+        name.textContent = f.name;
+        row.appendChild(name);
+        const meta = document.createElement('div');
+        meta.className = 'fmeta';
+        meta.textContent = fmtSize(f.size) + ' · ' + fmtTime(f.mtime);
+        row.appendChild(meta);
+        // 启停开关
+        const tg = document.createElement('label');
+        tg.className = 'mt-toggle';
+        tg.title = f.enabled ? '点击停用（不出现在生成下拉框）' : '点击启用';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = f.enabled;
+        cb.addEventListener('change', () => toggleFile(f.name, cb.checked));
+        const tr = document.createElement('span');
+        tr.className = 'track';
+        const kn = document.createElement('span');
+        kn.className = 'knob';
+        tg.appendChild(cb); tg.appendChild(tr); tg.appendChild(kn);
+        row.appendChild(tg);
+        // 删除
+        const del = document.createElement('button');
+        del.className = 'mt-del';
+        del.textContent = '删除';
+        del.addEventListener('click', () => deleteFile(f.name));
+        row.appendChild(del);
+        list.appendChild(row);
+      }
+    }
+
+    async function toggleFile(name, enabled) {
+      try {
+        await api('/api/admin/models/toggle?cat=' + currentCat + '&name=' + encodeURIComponent(name) + '&enabled=' + enabled, { method: 'POST' });
+        loadCat(currentCat);
+      } catch (e) {
+        document.getElementById('mt-status').textContent = '操作失败：' + e.message;
+        loadCat(currentCat);
+      }
+    }
+    async function deleteFile(name) {
+      if (!confirm('确定删除模型文件？\n\n' + name + '\n\n（文件会移入回收站，可恢复）')) return;
+      try {
+        await api('/api/admin/models/delete?cat=' + currentCat + '&name=' + encodeURIComponent(name), { method: 'POST' });
+        loadCat(currentCat);
+      } catch (e) {
+        document.getElementById('mt-status').textContent = '删除失败：' + e.message;
+      }
+    }
+
+    // ---------- 上传 ----------
+    document.getElementById('mt-file-btn').addEventListener('click', () => document.getElementById('mt-file').click());
+    document.getElementById('mt-file').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      document.getElementById('mt-file-name').textContent = f ? f.name : '未选择文件';
+      document.getElementById('mt-status').textContent = f ? '已选择：' + fmtSize(f.size) : '';
+    });
+    document.getElementById('mt-upload').addEventListener('click', () => {
+      const input = document.getElementById('mt-file');
+      const file = input.files[0];
+      if (!file) { document.getElementById('mt-status').textContent = '请先选择文件'; return; }
+      let sub = document.getElementById('mt-sub').value;
+      const subNew = document.getElementById('mt-sub-new').value.trim().replace(/[\\/]+/g, '/');
+      if (subNew) sub = sub ? sub + '/' + subNew : subNew;
+      const overwrite = document.getElementById('mt-ov').checked;
+      const params = new URLSearchParams({
+        cat: currentCat,
+        name: file.name,
+        subfolder: sub,
+        overwrite: String(overwrite),
+      });
+      const xhr = new XMLHttpRequest();
+      const bar = document.getElementById('mt-bar');
+      const fill = document.getElementById('mt-bar-fill');
+      const st = document.getElementById('mt-status');
+      const btn = document.getElementById('mt-upload');
+      btn.disabled = true;
+      bar.classList.add('show');
+      fill.style.width = '0%';
+      st.textContent = '上传中… 0%';
+      xhr.open('POST', '/api/admin/models/upload?' + params.toString());
+      xhr.upload.onprogress = (ev) => {
+        if (ev.lengthComputable) {
+          const pct = Math.round(ev.loaded / ev.total * 100);
+          fill.style.width = pct + '%';
+          st.textContent = '上传中… ' + pct + '%（' + fmtSize(ev.loaded) + ' / ' + fmtSize(ev.total) + '）';
+        }
+      };
+      xhr.onload = () => {
+        btn.disabled = false;
+        bar.classList.remove('show');
+        if (xhr.status === 200) {
+          let target = '';
+          try { target = JSON.parse(xhr.responseText).root || ''; } catch (e) {}
+          st.textContent = '✅ 上传完成：' + file.name + ' → ' + target + '（已出现在生成下拉框）';
+          input.value = '';
+          document.getElementById('mt-file-name').textContent = '未选择文件';
+          loadCat(currentCat);
+        } else {
+          let msg = 'HTTP ' + xhr.status;
+          try { msg = JSON.parse(xhr.responseText).detail || msg; } catch (e) {}
+          st.textContent = '上传失败：' + msg;
+        }
+      };
+      xhr.onerror = () => {
+        btn.disabled = false;
+        bar.classList.remove('show');
+        st.textContent = '上传失败：网络错误';
+      };
+      xhr.send(file);
+    });
+
+    // ---------- 回收站 ----------
+    async function loadTrash() {
+      const box = document.getElementById('mt-trash-list');
+      try {
+        const d = await api('/api/admin/models/trash?cat=' + currentCat);
+        box.classList.remove('hidden');
+        box.innerHTML = '';
+        if (!d.files.length) { box.innerHTML = '<div class="mt-empty">回收站为空</div>'; return; }
+        for (const f of d.files) {
+          const row = document.createElement('div');
+          row.className = 'trash-row';
+          const n = document.createElement('div');
+          n.className = 'fname';
+          n.textContent = f.name;
+          const meta = document.createElement('span');
+          meta.style.color = 'var(--text-dim)';
+          meta.textContent = ' ' + fmtSize(f.size);
+          n.appendChild(meta);
+          const rb = document.createElement('button');
+          rb.className = 'restore-btn';
+          rb.textContent = '恢复';
+          rb.addEventListener('click', async () => {
+            try {
+              await api('/api/admin/models/trash/restore?cat=' + currentCat + '&name=' + encodeURIComponent(f.name), { method: 'POST' });
+              loadTrash(); loadCat(currentCat);
+            } catch (e) { document.getElementById('mt-status').textContent = '恢复失败：' + e.message; }
+          });
+          row.appendChild(n);
+          row.appendChild(rb);
+          box.appendChild(row);
+        }
+      } catch (e) {
+        box.classList.remove('hidden');
+        box.innerHTML = '<div class="mt-empty">加载失败：' + escapeHtml(e.message) + '</div>';
+      }
+    }
+    document.getElementById('mt-trash-load').addEventListener('click', loadTrash);
+    document.getElementById('mt-trash-clear').addEventListener('click', async () => {
+      if (!confirm('确定清空当前分类的回收站？文件将永久删除，无法恢复！')) return;
+      try {
+        await api('/api/admin/models/trash/clear?cat=' + currentCat, { method: 'POST' });
+        loadTrash();
+      } catch (e) { document.getElementById('mt-status').textContent = '清空失败：' + e.message; }
+    });
+
+    // ---------- 事件绑定 ----------
+    document.querySelectorAll('.tab[data-cat]').forEach((b) => b.addEventListener('click', () => {
+      document.getElementById('mt-trash-list').classList.add('hidden');
+      loadCat(b.dataset.cat);
+    }));
+    document.getElementById('mt-refresh').addEventListener('click', () => loadCat(currentCat));
+    // 手动检查：汇总三类模型 + 隐患告警
+    document.getElementById('mt-check').addEventListener('click', async () => {
+      const box = document.getElementById('mt-check-result');
+      box.classList.remove('hidden');
+      const render = (inner) => {
+        box.innerHTML = inner;
+        const cb = box.querySelector('.check-close');
+        if (cb) cb.addEventListener('click', () => box.classList.add('hidden'));
+      };
+      render('<div class="check-head"><span class="check-title">🔍 手动检查结果</span><button class="check-close">✕ 收起</button></div><div class="check-loading">检查中…</div>');
+      try {
+        const d = await api('/api/admin/models/check');
+        let html = '<div class="check-head"><span class="check-title">🔍 手动检查结果</span><button class="check-close">✕ 收起</button></div>';
+        for (const c of d.categories) {
+          html += '<div class="check-row"><b>' + escapeHtml(c.label) + '</b>' +
+            '<span>' + c.count + ' 个文件（启用 ' + c.enabled_count + '）· 共 ' + fmtSize(c.total_bytes) +
+            ' · 磁盘剩余 ' + (c.free_gb != null ? c.free_gb + ' GB' : '-') + '</span></div>';
+        }
+        html += '<div class="check-warns">' +
+          (d.warnings.length
+            ? d.warnings.map((w) => '⚠ ' + escapeHtml(w)).join('<br>')
+            : '✅ 无异常：所有模板默认模型均在位，禁用名单无残留') +
+          '</div>';
+        render(html);
+      } catch (e) {
+        render('<div class="check-head"><span class="check-title">🔍 手动检查</span><button class="check-close">✕ 收起</button></div><div class="check-warns">检查失败：' + escapeHtml(e.message) + '</div>');
+      }
+    });
+    // 打开目标文件夹（服务器资源管理器）
+    document.getElementById('mt-open').addEventListener('click', () => openFolder(currentCat, ''));
+    function openFolder(cat, root) {
+      const url = '/api/admin/models/open?cat=' + cat + (root ? '&root=' + encodeURIComponent(root) : '');
+      api(url, { method: 'POST' }).then((d) => {
+        document.getElementById('mt-status').textContent = '📂 已打开文件夹：' + d.folder;
+      }).catch((e) => {
+        document.getElementById('mt-status').textContent = '打开失败：' + e.message;
+      });
+    }
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = document.getElementById('login-err');
+      err.textContent = '';
+      const fd = new FormData(e.target);
+      const r = await fetch('/admin/login', { method: 'POST', body: new URLSearchParams(fd) });
+      if (r.redirected) { location.href = r.url; return; }
+      if (r.status === 401) { err.textContent = '用户名或密码错误'; return; }
+      err.textContent = '登录失败，请重试';
+    });
+    document.getElementById('btn-logout').addEventListener('click', () => {
+      location.href = '/admin/logout';
+    });
+
+    // ================= 文件管理（输入/输出） =================
+    const FM = { root: 'input', path: '' };
+    const FM_NAMES = { input: '输入文件', output: '输出文件', workflow: '工作流' };
+    const FM_IMG = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.heic'];
+    const FM_VID = ['.mp4', '.webm', '.mov', '.mkv', '.avi', '.m4v'];
+
+    async function loadFiles(root, path) {
+      FM.root = root;
+      FM.path = path || '';
+      document.querySelectorAll('.tab[data-fmroot]').forEach((b) => b.classList.toggle('active', b.dataset.fmroot === root));
+      const list = document.getElementById('fm-list');
+      list.innerHTML = '<div class="mt-empty">加载中…</div>';
+      try {
+        const d = await api('/api/admin/files?root=' + root + '&path=' + encodeURIComponent(FM.path));
+        document.getElementById('fm-free').textContent = d.free_gb != null ? '磁盘剩余 ' + d.free_gb + ' GB' : '';
+        renderCrumb(d.path);
+        renderFileItems(d.items);
+        document.getElementById('fm-status').textContent = '';
+      } catch (e) {
+        list.innerHTML = '<div class="mt-empty">加载失败：' + escapeHtml(e.message) + '</div>';
+      }
+    }
+
+    function renderCrumb(path) {
+      const box = document.getElementById('fm-crumb');
+      box.innerHTML = '';
+      const parts = path ? path.split('/').filter(Boolean) : [];
+      const add = (label, p) => {
+        const a = document.createElement('a');
+        a.textContent = label;
+        a.addEventListener('click', () => loadFiles(FM.root, p));
+        box.appendChild(a);
+      };
+      add('📁 ' + FM_NAMES[FM.root], '');
+      let acc = '';
+      for (const part of parts) {
+        acc = acc ? acc + '/' + part : part;
+        const sep = document.createElement('span');
+        sep.className = 'sep';
+        sep.textContent = ' / ';
+        box.appendChild(sep);
+        add(part, acc);
+      }
+    }
+
+    function fmRel(name) {
+      return FM.path ? FM.path + '/' + name : name;
+    }
+
+    function renderFileItems(items) {
+      const list = document.getElementById('fm-list');
+      list.innerHTML = '';
+      if (!items.length) { list.innerHTML = '<div class="mt-empty">（空目录）</div>'; return; }
+      for (const it of items) {
+        const row = document.createElement('div');
+        row.className = 'mt-row';
+        if (it.is_dir) row.classList.add('fm-dir-row');
+        const icon = document.createElement('span');
+        icon.className = 'fm-icon';
+        icon.textContent = it.is_dir ? '📁' : '📄';
+        const name = document.createElement('div');
+        name.className = 'fname';
+        name.textContent = it.name;
+        row.appendChild(icon);
+        row.appendChild(name);
+        if (it.is_dir) {
+          row.addEventListener('click', () => loadFiles(FM.root, fmRel(it.name)));
+        } else {
+          const meta = document.createElement('div');
+          meta.className = 'fmeta';
+          meta.textContent = fmtSize(it.size) + ' · ' + fmtTime(it.mtime);
+          row.appendChild(meta);
+        }
+        // 操作按钮（文件夹也可复制/重命名/删除）
+        const acts = document.createElement('div');
+        acts.className = 'fm-row-actions';
+        const ext = it.is_dir ? '' : '.' + it.name.split('.').pop().toLowerCase();
+        if (!it.is_dir && (FM_IMG.includes(ext) || FM_VID.includes(ext))) {
+          const pv = document.createElement('button');
+          pv.className = 'fm-act';
+          pv.textContent = '预览';
+          pv.addEventListener('click', (e) => { e.stopPropagation(); previewFile(it.name, ext); });
+          acts.appendChild(pv);
+        }
+        if (!it.is_dir) {
+          const dl = document.createElement('button');
+          dl.className = 'fm-act';
+          dl.textContent = '下载';
+          dl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            location.href = '/api/admin/files/file?root=' + FM.root + '&path=' + encodeURIComponent(fmRel(it.name)) + '&download=1';
+          });
+          acts.appendChild(dl);
+        }
+        const cp = document.createElement('button');
+        cp.className = 'fm-act';
+        cp.textContent = '复制';
+        cp.addEventListener('click', (e) => { e.stopPropagation(); copyDialog(it.name, it.is_dir); });
+        acts.appendChild(cp);
+        const rn = document.createElement('button');
+        rn.className = 'fm-act';
+        rn.textContent = '重命名';
+        rn.addEventListener('click', (e) => { e.stopPropagation(); renameDialog(it.name); });
+        acts.appendChild(rn);
+        const del = document.createElement('button');
+        del.className = 'fm-act danger';
+        del.textContent = '删除';
+        del.addEventListener('click', (e) => { e.stopPropagation(); deleteFileItem(it.name, it.is_dir); });
+        acts.appendChild(del);
+        row.appendChild(acts);
+        list.appendChild(row);
+      }
+    }
+
+    // ---------- 弹窗 ----------
+    function closeModal() { document.getElementById('fm-modal').classList.add('hidden'); }
+    function showDialog(title, body, okText, onOk) {
+      const box = document.getElementById('fm-modal-box');
+      box.innerHTML = '<h4>' + escapeHtml(title) + '</h4>' + body +
+        '<div class="dlg-btns"><button class="cancel">取消</button><button class="ok">' + okText + '</button></div>';
+      document.getElementById('fm-modal').classList.remove('hidden');
+      box.querySelector('.cancel').addEventListener('click', closeModal);
+      box.querySelector('.ok').addEventListener('click', async () => {
+        try { await onOk(); closeModal(); }
+        catch (e) { alert('操作失败：' + e.message); }
+      });
+    }
+    document.getElementById('fm-modal').addEventListener('click', (e) => { if (e.target === e.currentTarget) closeModal(); });
+
+    function previewFile(name, ext) {
+      const url = '/api/admin/files/file?root=' + FM.root + '&path=' + encodeURIComponent(fmRel(name));
+      const media = FM_VID.includes(ext)
+        ? '<video src="' + url + '" controls autoplay playsinline></video>'
+        : '<img src="' + url + '" alt="' + escapeHtml(name) + '">';
+      const box = document.getElementById('fm-modal-box');
+      box.innerHTML = '<h4>预览：' + escapeHtml(name) + '</h4>' + media +
+        '<div class="dlg-btns"><button class="cancel">关闭</button></div>';
+      document.getElementById('fm-modal').classList.remove('hidden');
+      box.querySelector('.cancel').addEventListener('click', closeModal);
+    }
+
+    function copyDialog(name, isDir) {
+      const other = FM.root === 'input' ? 'output' : 'input';
+      showDialog(
+        '复制到（服务器内拷贝）· ' + name,
+        '<div class="dlg-row"><label>目标文件夹</label><select id="dlg-root">' +
+          '<option value="input"' + (other === 'input' ? ' selected' : '') + '>输入文件</option>' +
+          '<option value="output"' + (other === 'output' ? ' selected' : '') + '>输出文件</option>' +
+          '</select></div>' +
+          '<div class="dlg-row"><label>目标子目录（相对路径，留空 = 根目录）</label>' +
+          '<input id="dlg-path" placeholder="如 video"></div>',
+        '复制',
+        async () => {
+          const tr = document.getElementById('dlg-root').value;
+          const tp = document.getElementById('dlg-path').value.trim().replace(/[\\/]+/g, '/');
+          await api('/api/admin/files/copy?root=' + FM.root + '&path=' + encodeURIComponent(FM.path) +
+            '&name=' + encodeURIComponent(name) + '&target_root=' + tr + '&target_path=' + encodeURIComponent(tp),
+            { method: 'POST' });
+          loadFiles(FM.root, FM.path);
+        }
+      );
+    }
+
+    function renameDialog(name) {
+      showDialog(
+        '重命名 · ' + name,
+        '<div class="dlg-row"><label>新名称</label><input id="dlg-name" value="' + escapeHtml(name) + '"></div>',
+        '重命名',
+        async () => {
+          const nn = document.getElementById('dlg-name').value.trim();
+          if (!nn) throw new Error('名称不能为空');
+          await api('/api/admin/files/rename?root=' + FM.root + '&path=' + encodeURIComponent(FM.path) +
+            '&old=' + encodeURIComponent(name) + '&new=' + encodeURIComponent(nn), { method: 'POST' });
+          loadFiles(FM.root, FM.path);
+        }
+      );
+    }
+
+    function mkdirDialog() {
+      showDialog(
+        '新建文件夹',
+        '<div class="dlg-row"><label>文件夹名称</label><input id="dlg-name" placeholder="如 frames"></div>',
+        '创建',
+        async () => {
+          const nn = document.getElementById('dlg-name').value.trim();
+          if (!nn) throw new Error('名称不能为空');
+          await api('/api/admin/files/mkdir?root=' + FM.root + '&path=' + encodeURIComponent(FM.path) +
+            '&name=' + encodeURIComponent(nn), { method: 'POST' });
+          loadFiles(FM.root, FM.path);
+        }
+      );
+    }
+
+    async function deleteFileItem(name, isDir) {
+      if (!confirm('确定删除？\n\n' + name + (isDir ? '（文件夹，含全部内容）' : '') + '\n\n（会移入回收站，可恢复）')) return;
+      try {
+        await api('/api/admin/files/delete?root=' + FM.root + '&path=' + encodeURIComponent(FM.path) +
+          '&name=' + encodeURIComponent(name), { method: 'POST' });
+        loadFiles(FM.root, FM.path);
+      } catch (e) {
+        document.getElementById('fm-status').textContent = '删除失败：' + e.message;
+      }
+    }
+
+    // ---------- 上传 ----------
+    document.getElementById('fm-upload-btn').addEventListener('click', () => document.getElementById('fm-file').click());
+    document.getElementById('fm-file').addEventListener('change', (e) => {
+      const f = e.target.files[0];
+      e.target.value = '';
+      if (!f) return;
+      const xhr = new XMLHttpRequest();
+      const st = document.getElementById('fm-status');
+      st.textContent = '上传中… ' + f.name;
+      xhr.open('POST', '/api/admin/files/upload?root=' + FM.root + '&path=' + encodeURIComponent(FM.path) +
+        '&name=' + encodeURIComponent(f.name));
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          st.textContent = '✅ 已上传：' + f.name + ' → ' + FM_NAMES[FM.root] + (FM.path ? '/' + FM.path : '') + '/';
+          loadFiles(FM.root, FM.path);
+        } else {
+          let m = 'HTTP ' + xhr.status;
+          try { m = JSON.parse(xhr.responseText).detail || m; } catch (err) {}
+          st.textContent = '上传失败：' + m;
+        }
+      };
+      xhr.onerror = () => { st.textContent = '上传失败：网络错误'; };
+      xhr.send(f);
+    });
+    document.getElementById('fm-mkdir').addEventListener('click', mkdirDialog);
+    document.getElementById('fm-refresh').addEventListener('click', () => loadFiles(FM.root, FM.path));
+    document.querySelectorAll('.tab[data-fmroot]').forEach((b) => b.addEventListener('click', () => loadFiles(b.dataset.fmroot, '')));
+
+    // ---------- 文件回收站 ----------
+    async function loadFileTrash() {
+      const box = document.getElementById('fm-trash-list');
+      try {
+        const d = await api('/api/admin/files/trash?root=' + FM.root);
+        box.classList.remove('hidden');
+        box.innerHTML = '';
+        if (!d.files.length) { box.innerHTML = '<div class="mt-empty">回收站为空</div>'; return; }
+        for (const f of d.files) {
+          const row = document.createElement('div');
+          row.className = 'trash-row';
+          const n = document.createElement('div');
+          n.className = 'fname';
+          n.textContent = (f.is_dir ? '📁 ' : '📄 ') + f.name;
+          const meta = document.createElement('span');
+          meta.style.color = 'var(--text-dim)';
+          meta.textContent = f.size != null ? ' ' + fmtSize(f.size) : '';
+          n.appendChild(meta);
+          const rb = document.createElement('button');
+          rb.className = 'restore-btn';
+          rb.textContent = '恢复';
+          rb.addEventListener('click', async () => {
+            try {
+              await api('/api/admin/files/trash/restore?root=' + FM.root + '&key=' + encodeURIComponent(f.key), { method: 'POST' });
+              loadFileTrash(); loadFiles(FM.root, FM.path);
+            } catch (e) { document.getElementById('fm-status').textContent = '恢复失败：' + e.message; }
+          });
+          row.appendChild(n);
+          row.appendChild(rb);
+          box.appendChild(row);
+        }
+      } catch (e) {
+        box.classList.remove('hidden');
+        box.innerHTML = '<div class="mt-empty">加载失败：' + escapeHtml(e.message) + '</div>';
+      }
+    }
+    document.getElementById('fm-trash-load').addEventListener('click', loadFileTrash);
+    document.getElementById('fm-trash-clear').addEventListener('click', async () => {
+      if (!confirm('确定清空当前文件夹的回收站？文件将永久删除，无法恢复！')) return;
+      try {
+        await api('/api/admin/files/trash/clear?root=' + FM.root, { method: 'POST' });
+        loadFileTrash();
+      } catch (e) { document.getElementById('fm-status').textContent = '清空失败：' + e.message; }
+    });
+
+    // ---------- 文件管理独立窗口 ----------
+    function openFileWindow(root) {
+      document.getElementById('fm-window').classList.remove('hidden');
+      document.getElementById('fm-trash-list').classList.add('hidden');
+      loadFiles(root, '');
+    }
+    document.getElementById('fm-window-close').addEventListener('click', () => {
+      document.getElementById('fm-window').classList.add('hidden');
+    });
+    document.getElementById('fm-window').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) document.getElementById('fm-window').classList.add('hidden');
+    });
+    document.getElementById('btn-fm-input').addEventListener('click', () => openFileWindow('input'));
+    document.getElementById('btn-fm-output').addEventListener('click', () => openFileWindow('output'));
+    document.querySelectorAll('.tab[data-wf]').forEach((b) => b.addEventListener('click', () => openFileWindow('workflow')));
+
+    init();
+  </script>
+</body>
+</html>

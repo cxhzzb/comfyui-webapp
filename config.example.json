@@ -1,0 +1,12 @@
+{
+  "_说明": "复制本文件为 config.json 后按需修改。所有字段都可以省略，省略则用默认值或环境变量。本文件不含任何个人路径。",
+  "comfyui_root": "C:\\ComfyUI",
+  "comfy_shared_root": "C:\\ComfyUI-Shared",
+  "karaoke_python": "",
+  "hypit_root": "",
+  "video_projects_root": "",
+  "codex_cmd": "",
+  "hypit_cmd": "",
+  "host": "0.0.0.0",
+  "port": 8800
+}

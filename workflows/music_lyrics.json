@@ -1,0 +1,71 @@
+{
+  "1": {
+    "class_type": "QwenTE_ModelLoader",
+    "inputs": {
+      "模型系列": "Qwen3.5-VL",
+      "主模型": "Qwen3.5-4B-Q4_K_M.gguf",
+      "视觉投影mmproj": "无",
+      "启用思考": false,
+      "保留历史think": false,
+      "上下文长度": 8192,
+      "GPU层数": -1,
+      "KV缓存K类型": "默认(F16)",
+      "KV缓存V类型": "默认(F16)",
+      "MoE专家上CPU": false,
+      "前N层专家上CPU": 0,
+      "Qwen3.8推理强度": "xhigh",
+      "MTP推测解码": "关闭",
+      "MTP草稿token数": 2,
+      "Flash Attention": "不开启",
+      "MTP草稿模型": "无"
+    }
+  },
+  "2": {
+    "class_type": "MiniMaxMusic3LyricsWorkbench",
+    "inputs": {
+      "模式": "从零写歌词",
+      "主题": "",
+      "曲风情绪": "",
+      "歌词语言": "中文",
+      "歌曲长度": "标准 · 约 120 秒",
+      "副歌写法": "末次变奏（推荐）",
+      "已有歌词": "",
+      "必须出现的词": ""
+    }
+  },
+  "3": {
+    "class_type": "QwenTE_ImageInfer",
+    "inputs": {
+      "qwen模型": ["1", 0],
+      "输入模式": "文本",
+      "提示词": ["2", 0],
+      "系统提示词": ["2", 1],
+      "最多帧数": 24,
+      "最大边长": 1024,
+      "最大生成token": 2048,
+      "温度": 0.8,
+      "top_p": 0.9,
+      "top_k": 20,
+      "重复惩罚": 1.0,
+      "频率惩罚": 0.0,
+      "存在惩罚": 0.0,
+      "seed": 0,
+      "输出think块": false,
+      "生成后自动卸载模型": true
+    }
+  },
+  "4": {
+    "class_type": "MiniMaxMusic3LyricsClean",
+    "inputs": {
+      "歌词文本": ["3", 0],
+      "补齐前奏尾奏": true,
+      "行数上限": ["2", 3]
+    }
+  },
+  "5": {
+    "class_type": "PreviewAny",
+    "inputs": {
+      "source": ["4", 0]
+    }
+  }
+}

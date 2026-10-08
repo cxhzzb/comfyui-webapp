@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HorseDance 1.0</title>
+<link rel="stylesheet" href="/static/style.css?v=20260929n">
+</head>
+<body>
+  <header class="topnav">
+    <div class="brand">HorseDance<span class="brand-ver">1.0</span></div>
+    <nav class="mode-switch" id="mode-switch"></nav>
+    <div class="nav-right">
+      <div class="secret-pad" id="secret-pad">
+        <button type="button" class="secret-btn" data-key="triangle" aria-label="三角形">△</button>
+        <button type="button" class="secret-btn" data-key="x" aria-label="X形">✕</button>
+        <button type="button" class="secret-btn" data-key="square" aria-label="正方形">□</button>
+        <button type="button" class="secret-btn" data-key="circle" aria-label="圆形">◯</button>
+      </div>
+      <a class="nav-link" href="/">← 模式选择</a>
+      <button class="btn secondary btn-small" id="btn-reset">重置本页</button>
+    </div>
+  </header>
+
+  <div class="perf-strip" id="perf-strip">
+    <span class="ps-item" title="CPU 使用率">🖥️ CPU <b id="ps-cpu">--</b></span>
+    <span class="ps-item" title="内存占用">🧠 内存 <b id="ps-mem">--</b></span>
+    <span class="ps-item" title="GPU 使用率">🎮 GPU <b id="ps-gpu">--</b></span>
+    <span class="ps-item" title="显存占用">💾 显存 <b id="ps-vram">--</b></span>
+    <button type="button" class="perf-free-btn" id="perf-free" title="释放内存与显存（有任务生成时自动跳过）">♻️ 释放</button>
+  </div>
+
+  <div class="lane-strip hidden" id="lane-strip"></div>
+
+  <div class="layout">
+    <aside class="controls">
+      <h1 id="mode-name">加载中…</h1>
+      <p class="mode-desc" id="mode-desc"></p>
+
+      <div class="panel hidden" id="images-panel">
+        <h3>素材上传</h3>
+        <div class="slots" id="slots"></div>
+      </div>
+
+      <div class="panel" id="prompt-panel" style="position:relative">
+        <h3>提示词</h3>
+        <div id="llm-cfg-pop" class="hidden" style="position:absolute;right:14px;top:40px;z-index:60;width:300px;background:#141418;border:1px solid #2a2a32;border-radius:12px;padding:14px;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+          <div class="slot-label">线上 API 配置</div>
+          <input type="text" id="llm-cfg-base" placeholder="base_url，如 https://api.deepseek.com/v1" style="width:100%;margin-bottom:6px">
+          <input type="password" id="llm-cfg-key" placeholder="API Key" style="width:100%;margin-bottom:6px">
+          <input type="text" id="llm-cfg-model" placeholder="模型名，如 deepseek-chat" style="width:100%;margin-bottom:6px" list="llm-model-list">
+          <datalist id="llm-model-list"></datalist>
+          <div class="row" style="margin-bottom:6px">
+            <button class="btn secondary btn-small" id="btn-llm-models" type="button" title="用上面的地址和 Key 拉取服务商支持的模型名">🔁 拉取可用模型</button>
+          </div>
+          <div class="slot-label" style="margin-top:6px">线下模型（本地 GGUF）
+            <span id="llm-guide-tag" style="cursor:help;color:#86efac" title="查看各模型用途">ⓘ</span>
+          </div>
+          <select id="llm-cfg-local" style="width:100%"></select>
+          <div id="llm-guide-pop" class="hidden" style="margin-top:6px;max-height:220px;overflow:auto;font-size:12px;line-height:1.7;background:#0e0e12;border:1px solid #2a2a32;border-radius:8px;padding:8px"></div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn secondary btn-small" id="btn-llm-cfg-save">保存 API 配置</button>
+            <span class="status-line hidden" id="llm-cfg-status"></span>
+          </div>
+        </div>
+        <div id="builtin-prompt-wrap" class="hidden">
+          <div class="slot-label">工作流内置提示词（只读）</div>
+          <div class="enhanced-box" id="builtin-prompt"></div>
+        </div>
+        <div id="editable-prompt-wrap">
+          <textarea id="prompt" placeholder="输入提示词…"></textarea>
+          <div class="row hidden" id="enhance-mode-row">
+            <label class="slot-label" for="enhance-mode" style="margin:0">提示词优化模式</label>
+            <select id="enhance-mode"></select>
+          </div>
+          <div class="row">
+            <select id="llm-route" title="提示词 AI 走本地模型还是线上 API" style="max-width:132px">
+              <option value="local" selected>🏠 线下本地</option>
+              <option value="api">☁️ 线上 API</option>
+            </select>
+            <button type="button" class="btn secondary btn-small" id="btn-llm-cfg" title="提示词 AI 设置（API 配置 / 线下模型选择）">⚙️</button>
+            <button class="btn secondary" id="btn-enhance">✨ 提示词增强</button>
+            <span class="status-line hidden" id="enhance-status"></span>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <input type="text" id="revise-main-input" placeholder="二次优化：对当前提示词提修改要求，如「改成夜晚、加雨」（会直接替换上方内容）" style="flex:1">
+            <button class="btn secondary" id="btn-revise-main" title="按修改要求改写当前提示词">🛠 修正</button>
+          </div>
+          <span class="status-line hidden" id="revise-main-status"></span>
+          <div id="enhanced-wrap" class="hidden" style="margin-top:14px">
+            <div class="enhanced-box" id="enhanced-text"></div>
+            <div class="row">
+              <button class="btn secondary" id="btn-use-enhanced">使用增强结果</button>
+            </div>
+            <div class="row" style="margin-top:10px">
+              <input type="text" id="revise-input" placeholder="对增强结果提修改要求，如：改成夜晚、加上雨天" style="flex:1">
+              <button class="btn secondary" id="btn-revise">🛠 修正</button>
+            </div>
+            <span class="status-line hidden" id="revise-status"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="opts-panel">
+        <h3>可选参数</h3>
+        <div class="opt-grid">
+          <div class="opt hidden" id="opt-seconds">
+            <label>视频时长（秒）</label>
+            <div class="range-row">
+              <input type="range" id="seconds" min="5" max="20" step="1">
+              <span class="range-val" id="seconds-val"></span>
+            </div>
+          </div>
+          <div class="opt hidden" id="opt-ratio">
+            <label>画面比例</label>
+            <select id="aspect-ratio"></select>
+          </div>
+          <div class="opt">
+            <label>种子</label>
+            <select id="seed-mode" style="margin-bottom:6px">
+              <option value="random" selected>每次随机</option>
+              <option value="draw">随机抽取</option>
+              <option value="last">固定上次</option>
+            </select>
+            <div style="display:flex;gap:6px">
+              <input type="number" id="seed" value="-1" step="1" style="flex:1" disabled>
+              <button type="button" class="btn secondary btn-small hidden" id="btn-seed-draw" title="重新抽取一个种子">🎲</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="opt hidden" id="lane-opt">
+          <label>算力车道</label>
+          <select id="lane-select"></select>
+        </div>
+        <div class="row" style="margin-top:0">
+          <button class="btn btn-primary" id="btn-generate">生成</button>
+          <button class="btn secondary hidden" id="btn-cancel">取消</button>
+          <span class="status-line" id="gen-status"></span>
+        </div>
+      </div>
+
+      <div class="adv-panel hidden" id="adv-panel">
+        <button class="adv-head" id="adv-head">
+          <span>高级参数</span>
+          <span class="adv-arrow" id="adv-arrow">▾</span>
+        </button>
+        <div class="adv-body" id="adv-body">
+          <div class="adv-ctrl hidden" id="adv-steps-wrap">
+            <label>步数<span class="adv-val" id="adv-steps-val"></span></label>
+            <input type="range" id="adv-steps">
+          </div>
+          <div class="adv-ctrl hidden" id="adv-mp-wrap">
+            <label>分辨率（MP）<span class="adv-val" id="adv-mp-val"></span></label>
+            <input type="range" id="adv-mp">
+          </div>
+          <div class="adv-ctrl hidden" id="adv-unet-wrap">
+            <label>UNET 主模型</label>
+            <select id="adv-unet"></select>
+          </div>
+          <div class="adv-ctrl hidden" id="adv-clip-wrap">
+            <label>CLIP 模型</label>
+            <select id="adv-clip"></select>
+          </div>
+          <div class="adv-ctrl hidden" id="adv-lora-wrap">
+            <label>加速 LoRA</label>
+            <select id="adv-lora"></select>
+          </div>
+          <div class="adv-ctrl hidden" id="adv-lora-str-wrap">
+            <label>LoRA 强度<span class="adv-val" id="adv-lora-str-val"></span></label>
+            <input type="range" id="adv-lora-str">
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="preview" id="preview">
+      <div class="danmaku" id="danmaku"></div>
+      <div class="preview-empty" id="preview-empty">
+        <div class="preview-empty-icon">🎬</div>
+        <p>生成结果将显示在这里</p>
+      </div>
+      <div class="preview-progress hidden" id="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-text" id="progress-text"></div>
+      </div>
+      <div class="result-media" id="result"></div>
+      <div class="preview-elapsed hidden" id="elapsed-line"></div>
+    </main>
+
+    <aside class="history" id="history-panel">
+      <div class="history-head">
+        <h3>生成历史</h3>
+        <button class="btn secondary btn-small" id="btn-clear-history">清空</button>
+      </div>
+      <div class="history-empty" id="history-empty">暂无生成记录</div>
+      <div class="history-list" id="history-list"></div>
+    </aside>
+  </div>
+<script src="/static/mode.js?v=20260929n"></script>
+<script src="/static/secret.js?v=20260813i"></script>
+</body>
+</html>

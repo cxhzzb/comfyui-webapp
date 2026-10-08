@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HorseDance 1.0 · HYPIT 工坊</title>
+<link rel="stylesheet" href="/static/style.css?v=20260907g">
+<style>
+  /* HYPIT 工坊三栏布局（页面私有，不进公共 style.css） */
+  .hypit-main { flex: 1; display: flex; gap: 12px; padding: 12px 16px 16px; min-height: 0; position: relative; z-index: 1; }
+  .hp-col { background: var(--glass); border: 1px solid var(--border); border-radius: var(--radius);
+            backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+            display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .hp-col-projects { width: 250px; flex: 0 0 auto; }
+  .hp-col-chat { flex: 1; min-width: 0; }
+  .hp-col-files { width: 380px; flex: 0 0 auto; }
+  .hp-col-head { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 13px;
+                 color: var(--text-dim); letter-spacing: .12em; display: flex; align-items: center; gap: 8px; }
+  .hp-col-head .spacer { margin-left: auto; }
+  .hp-proj-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .hp-proj { padding: 9px 10px; border-radius: 10px; cursor: pointer; border: 1px solid transparent; margin-bottom: 4px; }
+  .hp-proj:hover { background: var(--glass-strong); }
+  .hp-proj.active { border-color: var(--accent); background: var(--accent-dim); }
+  .hp-proj .p-name { font-size: 13px; font-weight: 600; word-break: break-all; }
+  .hp-proj .p-meta { font-size: 11px; color: var(--text-dim); margin-top: 3px; }
+  .hp-proj .p-meta .pend { color: var(--accent); }
+  .hp-new { padding: 8px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+  .hp-new select, .hp-new input { width: 100%; font-size: 12px; }
+  .hp-chat-log { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .hp-msg { max-width: 92%; padding: 9px 12px; border-radius: 12px; font-size: 13px; line-height: 1.75;
+            white-space: pre-wrap; word-break: break-word; }
+  .hp-msg.user { align-self: flex-end; background: var(--accent-dim); border: 1px solid rgba(134,239,172,.3); }
+  .hp-msg.agent { align-self: flex-start; background: var(--glass-strong); border: 1px solid var(--border); }
+  .hp-msg.sys { align-self: center; background: none; border: none; color: var(--text-dim); font-size: 11px; padding: 2px; }
+  .hp-msg.sys.err { color: var(--danger); }
+  .hp-cmd { align-self: stretch; font-size: 12px; border: 1px solid var(--border); border-radius: 10px;
+            background: rgba(0,0,0,.25); overflow: hidden; }
+  .hp-cmd summary { padding: 7px 10px; cursor: pointer; color: var(--text-dim); display: flex; gap: 8px; align-items: center; }
+  .hp-cmd summary:hover { color: var(--text); }
+  .hp-cmd .cmd-str { font-family: Consolas, monospace; word-break: break-all; }
+  .hp-cmd .exit-ok { color: var(--ok); flex: 0 0 auto; }
+  .hp-cmd .exit-bad { color: var(--danger); flex: 0 0 auto; }
+  .hp-cmd pre { padding: 8px 10px; border-top: 1px solid var(--border); max-height: 260px; overflow: auto;
+                font-family: Consolas, monospace; font-size: 11px; color: var(--text-dim); white-space: pre-wrap; }
+  .hp-filechip { align-self: flex-start; font-size: 11px; color: var(--accent); border: 1px dashed rgba(134,239,172,.4);
+                 border-radius: 8px; padding: 4px 8px; cursor: pointer; }
+  .hp-filechip:hover { background: var(--accent-dim); }
+  .hp-chat-input { border-top: 1px solid var(--border); padding: 10px; display: flex; gap: 8px; align-items: flex-end; }
+  .hp-chat-input textarea { flex: 1; resize: none; height: 56px; font-size: 13px; }
+  .hp-file-list { flex: 1; overflow-y: auto; padding: 6px; min-height: 80px; }
+  .hp-file { padding: 5px 8px; border-radius: 8px; font-size: 12px; cursor: pointer; color: var(--text-dim);
+             font-family: Consolas, "Microsoft YaHei", monospace; word-break: break-all; display: flex; gap: 6px; }
+  .hp-file:hover { background: var(--glass-strong); color: var(--text); }
+  .hp-file.active { color: var(--accent); background: var(--accent-dim); }
+  .hp-file .f-size { margin-left: auto; flex: 0 0 auto; opacity: .6; }
+  .hp-preview { flex: 0 0 46%; border-top: 1px solid var(--border); overflow: auto; padding: 10px;
+                display: flex; flex-direction: column; gap: 8px; }
+  .hp-preview .pv-name { font-size: 12px; color: var(--accent); word-break: break-all; }
+  .hp-preview pre { font-size: 11.5px; line-height: 1.7; white-space: pre-wrap; word-break: break-word;
+                    font-family: Consolas, "Microsoft YaHei", monospace; color: var(--text); }
+  .hp-preview img, .hp-preview video { max-width: 100%; border-radius: 8px; }
+  .hp-preview audio { width: 100%; }
+  .hp-status { font-size: 11px; color: var(--accent); }
+  .hp-badge { font-size: 10px; color: var(--accent); border: 1px solid rgba(134,239,172,.4);
+              border-radius: 6px; padding: 2px 6px; letter-spacing: .1em; }
+  .hp-modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 80;
+                   display: flex; align-items: center; justify-content: center; }
+  .hp-modal { width: 420px; max-width: 92vw; max-height: 88vh; overflow-y: auto;
+              background: #141418; border: 1px solid var(--border-hi); border-radius: var(--radius);
+              padding: 18px; box-shadow: 0 12px 48px rgba(0,0,0,.6); }
+  .hp-modal-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; letter-spacing: .1em; }
+  .hp-field { display: block; margin-bottom: 12px; }
+  .hp-field span { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 5px; }
+  .hp-field input, .hp-field select, .hp-field textarea { width: 100%; font-size: 13px; }
+  .hp-field input[type=file] { color: var(--text-dim); }
+  .hp-modal-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+  .hp-modal-status { font-size: 12px; color: var(--text-dim); margin-top: 8px; min-height: 16px; }
+  .dl-retry { font-size: 10px; padding: 1px 6px; border-radius: 6px; background: none;
+              border: 1px solid var(--border-hi); color: var(--text-dim); cursor: pointer; }
+  .dl-retry:hover { color: var(--accent); border-color: var(--accent); }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+  <header class="topnav">
+    <div class="brand">HorseDance<span class="brand-ver">1.0</span></div>
+    <nav class="mode-switch" id="mode-switch"></nav>
+    <div class="nav-right">
+      <span class="hp-badge">仅本机</span>
+      <span class="hp-status" id="hp-status"></span>
+      <a class="nav-link" href="/">← 模式选择</a>
+    </div>
+  </header>
+  <main class="hypit-main">
+    <section class="hp-col hp-col-projects">
+      <div class="hp-col-head">项目<div class="spacer"></div>
+        <button type="button" class="btn secondary btn-small" id="btn-refresh" title="刷新项目列表">↻</button>
+      </div>
+      <div class="hp-proj-list" id="proj-list"><p class="p-meta" style="padding:8px">加载中…</p></div>
+      <div class="hp-new">
+        <button type="button" class="btn secondary btn-small" id="btn-new-open" style="width:100%">＋ 新建项目</button>
+      </div>
+    </section>
+    <section class="hp-col hp-col-chat">
+      <div class="hp-col-head">导演对话<span id="chat-proj" style="color:var(--text)"></span><div class="spacer"></div><span id="chat-usage" style="font-size:11px"></span></div>
+      <div class="hp-chat-log" id="chat-log">
+        <div class="hp-msg sys">选择左侧项目开始对话。对话即导演：Brief、分镜、生成、合成都交给 Codex agent 在项目目录里完成。</div>
+      </div>
+      <div class="hp-chat-input">
+        <textarea id="chat-text" placeholder="对导演说…（Enter 发送，Shift+Enter 换行）" disabled></textarea>
+        <button type="button" class="btn" id="btn-send" disabled>发送</button>
+      </div>
+    </section>
+    <section class="hp-col hp-col-files">
+      <div class="hp-col-head">项目文件<div class="spacer"></div>
+        <button type="button" class="btn secondary btn-small" id="btn-files-refresh" title="刷新文件列表">↻</button>
+      </div>
+      <div class="hp-file-list" id="file-list"></div>
+      <div class="hp-preview" id="preview"><span style="color:var(--text-dim);font-size:12px">点击文件预览</span></div>
+    </section>
+  </main>
+  <!-- 新建项目向导：1 建目录 → 2 参考片（上传或链接）→ 3 项目需求 -->
+  <div class="hp-modal-mask hidden" id="new-modal">
+    <div class="hp-modal">
+      <div class="hp-modal-title">新建项目</div>
+      <label class="hp-field"><span>1 · 项目名</span>
+        <input type="text" id="new-name" placeholder="建同名项目文件夹 + BRIEF.md">
+      </label>
+      <label class="hp-field"><span>存放位置</span>
+        <select id="new-root"></select>
+      </label>
+      <label class="hp-field"><span>2 · 参考视频（上传，可选）</span>
+        <input type="file" id="new-file" accept="video/*">
+      </label>
+      <label class="hp-field"><span>或参考链接（可选，自动下载到项目）</span>
+        <input type="text" id="new-link" placeholder="https://…（B站 / YouTube / 直链）">
+      </label>
+      <label class="hp-field"><span>3 · 项目需求</span>
+        <textarea id="new-req" rows="5" placeholder="要做什么：主题、时长、画幅、风格，参考片要复刻/借鉴什么…"></textarea>
+      </label>
+      <div class="hp-modal-btns">
+        <button type="button" class="btn secondary btn-small" id="btn-new-cancel">取消</button>
+        <button type="button" class="btn" id="btn-new-ok">创建项目</button>
+      </div>
+      <div class="hp-modal-status" id="new-status"></div>
+    </div>
+  </div>
+<script src="/static/hypit.js?v=20260929p"></script>
+</body>
+</html>

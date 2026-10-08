@@ -1,0 +1,9 @@
+{
+  "auth_user": "admin",
+  "auth_pass": "改成一个强密码",
+  "admin_user": "admin",
+  "admin_pass": "改成另一个强密码",
+  "session_secret": "用 python -c \"import secrets;print(secrets.token_hex(16))\" 生成",
+  "secret_seq": ["circle", "circle", "square", "x"],
+  "_说明": "复制本文件为 auth_config.json 并填入真实值；也可用环境变量 WEBAPP_AUTH_PASS / WEBAPP_AUTH_USER / WEBAPP_ADMIN_PASS / WEBAPP_ADMIN_USER 覆盖。auth_config.json 不入版本控制。secret_seq 是管理员页面的隐藏解锁图案，请改成自己的组合，不要沿用示例。"
+}

@@ -1,0 +1,248 @@
+{
+  "305": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "Minimax_H3\\minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "298": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen3vl_32b_h3_ultra_uncensored_heretic_int8_convrot.safetensors",
+      "type": "minimax",
+      "device": "default"
+    }
+  },
+  "306": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    }
+  },
+  "297": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    }
+  },
+  "307": {
+    "class_type": "MiniMaxH3MemoryEfficientSageAttentionPatch",
+    "inputs": {
+      "model": [
+        "305",
+        0
+      ]
+    }
+  },
+  "300": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "307",
+        0
+      ],
+      "lora_name": "minimax_h3_turbo_v4_step600_ema_pruned_comfyui.safetensors",
+      "strength_model": 1.0
+    }
+  },
+  "299": {
+    "class_type": "BasicGuider",
+    "inputs": {
+      "model": [
+        "300",
+        0
+      ],
+      "conditioning": [
+        "316",
+        0
+      ]
+    }
+  },
+  "301": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": [
+        "303",
+        0
+      ]
+    }
+  },
+  "303": {
+    "class_type": "Seed (rgthree)",
+    "inputs": {
+      "seed": 423456789012345
+    }
+  },
+  "291": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+      "sampler_name": "res_multistep"
+    }
+  },
+  "288": {
+    "class_type": "BasicScheduler",
+    "inputs": {
+      "model": [
+        "305",
+        0
+      ],
+      "scheduler": "simple",
+      "steps": 8,
+      "denoise": 1
+    }
+  },
+  "308": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "webapp_test_gradient.png"
+    }
+  },
+  "295": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "webapp_test_gradient.png"
+    }
+  },
+  "316": {
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "inputs": {
+      "clip": [
+        "298",
+        0
+      ],
+      "vae": [
+        "306",
+        0
+      ],
+      "audio_vae": [
+        "297",
+        0
+      ],
+      "ref_images.ref_image_0": [
+        "308",
+        0
+      ],
+      "ref_images.ref_image_1": [
+        "295",
+        0
+      ],
+      "prompt": "<Subject 1> 在阳光明媚的街道上自然地行走并环顾四周，镜头平稳跟随，动作连贯自然。",
+      "width": [
+        "290",
+        0
+      ],
+      "height": [
+        "290",
+        1
+      ],
+      "length": [
+        "289",
+        1
+      ],
+      "ref_image_size": "match"
+    }
+  },
+  "290": {
+    "class_type": "ResolutionSelector",
+    "inputs": {
+      "aspect_ratio": "16:9 (Widescreen)",
+      "megapixels": 0.6,
+      "multiple": 32
+    }
+  },
+  "292": {
+    "class_type": "PrimitiveFloat",
+    "inputs": {
+      "value": 8
+    }
+  },
+  "289": {
+    "class_type": "ComfyMathExpression",
+    "inputs": {
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "values.a": [
+        "292",
+        0
+      ]
+    }
+  },
+  "287": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": [
+        "301",
+        0
+      ],
+      "guider": [
+        "299",
+        0
+      ],
+      "sampler": [
+        "291",
+        0
+      ],
+      "sigmas": [
+        "288",
+        0
+      ],
+      "latent_image": [
+        "316",
+        1
+      ]
+    }
+  },
+  "304": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "287",
+        0
+      ],
+      "vae": [
+        "306",
+        0
+      ]
+    }
+  },
+  "302": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "287",
+        0
+      ],
+      "vae": [
+        "297",
+        0
+      ]
+    }
+  },
+  "296": {
+    "class_type": "CreateVideo",
+    "inputs": {
+      "images": [
+        "304",
+        0
+      ],
+      "fps": 24,
+      "audio": [
+        "302",
+        0
+      ],
+      "bit_depth": 8
+    }
+  },
+  "285": {
+    "class_type": "SaveVideo",
+    "inputs": {
+      "video": [
+        "296",
+        0
+      ],
+      "filename_prefix": "video/MiniMax_H3",
+      "format": "auto",
+      "codec": "auto"
+    }
+  }
+}

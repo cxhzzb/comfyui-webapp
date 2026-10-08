@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HorseDance 1.0 · MV 工坊</title>
+<link rel="stylesheet" href="/static/style.css?v=20260907g">
+</head>
+<body>
+  <header class="topnav">
+    <div class="brand">HorseDance<span class="brand-ver">1.0</span></div>
+    <nav class="mode-switch" id="mode-switch"></nav>
+    <div class="nav-right">
+      <select id="llm-route" title="提示词 AI 走本地模型还是线上 API" style="max-width:132px;margin-right:8px">
+        <option value="local" selected>🏠 线下本地</option>
+        <option value="api">☁️ 线上 API</option>
+      </select>
+      <button type="button" class="btn secondary btn-small" id="btn-llm-cfg" title="提示词 AI 设置（API 配置 / 线下模型选择）" style="margin-right:8px">⚙️</button>
+      <div id="llm-cfg-pop" class="hidden" style="position:fixed;right:16px;top:56px;z-index:60;width:300px;background:#141418;border:1px solid #2a2a32;border-radius:12px;padding:14px;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+        <div class="slot-label">线上 API 配置</div>
+        <input type="text" id="llm-cfg-base" placeholder="base_url，如 https://api.deepseek.com/v1" style="width:100%;margin-bottom:6px">
+        <input type="password" id="llm-cfg-key" placeholder="API Key" style="width:100%;margin-bottom:6px">
+        <input type="text" id="llm-cfg-model" placeholder="模型名，如 deepseek-chat" style="width:100%;margin-bottom:6px" list="llm-model-list">
+        <datalist id="llm-model-list"></datalist>
+        <div class="row" style="margin-bottom:6px">
+          <button class="btn secondary btn-small" id="btn-llm-models" type="button" title="用上面的地址和 Key 拉取服务商支持的模型名">🔁 拉取可用模型</button>
+        </div>
+        <div class="slot-label" style="margin-top:6px">线下模型（本地 GGUF）
+          <span id="llm-guide-tag" style="cursor:help;color:#86efac" title="查看各模型用途">ⓘ</span>
+        </div>
+        <select id="llm-cfg-local" style="width:100%"></select>
+        <div id="llm-guide-pop" class="hidden" style="margin-top:6px;max-height:220px;overflow:auto;font-size:12px;line-height:1.7;background:#0e0e12;border:1px solid #2a2a32;border-radius:8px;padding:8px"></div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn secondary btn-small" id="btn-llm-cfg-save">保存 API 配置</button>
+          <span class="status-line hidden" id="llm-cfg-status"></span>
+        </div>
+      </div>
+      <div class="secret-pad" id="secret-pad">
+        <button type="button" class="secret-btn" data-key="triangle" aria-label="三角形">△</button>
+        <button type="button" class="secret-btn" data-key="x" aria-label="X形">✕</button>
+        <button type="button" class="secret-btn" data-key="square" aria-label="正方形">□</button>
+        <button type="button" class="secret-btn" data-key="circle" aria-label="圆形">◯</button>
+      </div>
+      <a class="nav-link" href="/">← 模式选择</a>
+      <button class="btn secondary btn-small" id="btn-reset">重置本页</button>
+    </div>
+  </header>
+
+  <div class="perf-strip" id="perf-strip">
+    <span class="ps-item" title="CPU 使用率">🖥️ CPU <b id="ps-cpu">--</b></span>
+    <span class="ps-item" title="内存占用">🧠 内存 <b id="ps-mem">--</b></span>
+    <span class="ps-item" title="GPU 使用率">🎮 GPU <b id="ps-gpu">--</b></span>
+    <span class="ps-item" title="显存占用">💾 显存 <b id="ps-vram">--</b></span>
+  </div>
+
+  <div class="mv-wrap">
+    <h1 class="mv-title">MV 工坊</h1>
+
+    <div class="mv-stepper" id="stepper">
+      <div class="mv-step" data-step="1"><b>1</b><span>选歌曲</span></div>
+      <div class="mv-step" data-step="2"><b>2</b><span>段落规划</span></div>
+      <div class="mv-step" data-step="3"><b>3</b><span>逐段配图</span></div>
+      <div class="mv-step" data-step="4"><b>4</b><span>批量生成</span></div>
+      <div class="mv-step" data-step="5"><b>5</b><span>合成下载</span></div>
+    </div>
+
+    <!-- 第 1 步：选歌曲 -->
+    <section class="mv-panel" id="panel-1">
+      <h2>选一首你生成的歌</h2>
+      <p class="mv-hint">列出的是「想把我唱你听」生成的、带参数留档的歌曲。</p>
+      <div id="song-list" class="song-list"><p class="loading">加载中…</p></div>
+      <div class="mv-actions">
+        <button class="btn btn-primary" id="btn-to-2" disabled>下一步：段落规划 →</button>
+      </div>
+    </section>
+
+    <!-- 第 2 步：段落规划 -->
+    <section class="mv-panel hidden" id="panel-2">
+      <h2>段落规划</h2>
+      <p class="mv-hint" id="plan-status">根据曲风 + 歌词结构 + 人声真实时间轴自动规划，提示词可改。</p>
+      <div id="plan-timeline" class="plan-timeline"></div>
+      <div class="mv-actions">
+        <button class="btn secondary" id="btn-back-1">← 上一步</button>
+        <button class="btn secondary" id="btn-replan">↻ 重新规划</button>
+        <button class="btn btn-primary" id="btn-to-3" disabled>下一步：逐段配图 →</button>
+      </div>
+    </section>
+
+    <!-- 第 3 步：逐段配图 -->
+    <section class="mv-panel hidden" id="panel-3">
+      <h2>逐段配图</h2>
+      <p class="mv-hint">每段提示词可改、可 ✨AI 优化、可勾 👄对口型；配图 1~4 张（主角/场景），图越多人物场景越一致；不传则纯文字生成。</p>
+      <div id="section-images" class="section-images"></div>
+      <div class="mv-actions">
+        <button class="btn secondary" id="btn-back-2">← 上一步</button>
+        <button class="btn btn-primary" id="btn-to-4">下一步：批量生成 →</button>
+      </div>
+    </section>
+
+    <!-- 第 4 步：批量生成 -->
+    <section class="mv-panel hidden" id="panel-4">
+      <h2>批量生成</h2>
+      <p class="mv-hint" id="gen-hint">逐段生成视频（每段 ≤15 秒），失败可单独重试，中断后重进自动续跑。</p>
+      <div class="mv-actions" style="margin-bottom:14px">
+        <button class="btn btn-primary" id="btn-generate">▶ 开始生成</button>
+        <span class="status-line" id="gen-status"></span>
+      </div>
+      <div id="clips-grid" class="clips-grid"></div>
+      <div class="mv-actions">
+        <button class="btn secondary" id="btn-back-3">← 上一步</button>
+        <button class="btn btn-primary hidden" id="btn-to-5">下一步：合成下载 →</button>
+      </div>
+    </section>
+
+    <!-- 第 5 步：合成下载 -->
+    <section class="mv-panel hidden" id="panel-5">
+      <h2>合成下载</h2>
+      <div class="opt" style="max-width:520px">
+        <label class="check-row">
+          <input type="checkbox" id="mix-ambient" checked>
+          混入 20% 环境音/同期声（视频原声垫在歌曲下面，更有现场感）
+        </label>
+      </div>
+      <div class="mv-actions">
+        <button class="btn secondary" id="btn-back-4">← 上一步</button>
+        <button class="btn btn-primary" id="btn-assemble">🎬 合成 MV</button>
+        <span class="status-line" id="assemble-status"></span>
+      </div>
+      <div id="mv-result" class="mv-result"></div>
+    </section>
+  </div>
+<script src="/static/mv.js?v=20260929j"></script>
+<script src="/static/secret.js?v=20260813i"></script>
+</body>
+</html>

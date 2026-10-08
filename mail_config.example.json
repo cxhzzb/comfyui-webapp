@@ -1,0 +1,8 @@
+{
+  "_说明": "复制本文件为 mail_config.json 后填入真实值，供 ip_monitor.py 发信使用。smtp_pass 通常是邮箱『授权码/应用专用密码』，不是登录密码。mail_config.json 不入版本控制。",
+  "smtp_host": "smtp.qq.com",
+  "smtp_port": 465,
+  "smtp_user": "you@example.com",
+  "smtp_pass": "邮箱授权码",
+  "to": "you@example.com"
+}

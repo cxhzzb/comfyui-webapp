@@ -1,0 +1,44 @@
+# ============================================================
+# ComfyUI Webapp —— 版本控制规则
+# 原则：只入库「代码 + 模板 + 文档」，绝不入库凭据、运行时状态与生成物。
+# ============================================================
+
+# ---------- 凭据与本地配置：永不入库 ----------
+config.json
+auth_config.json
+llm_api_config.json
+mail_config.json
+secrets.local.md
+*.env
+.env.*
+
+# ---------- 运行时状态 ----------
+_scratch/
+logs/
+__pycache__/
+*.py[cod]
+server_out.log
+server_err.log
+*.log
+tasks.json
+lane_sync_state.json
+admin_secret_state.json
+_last_public_ip.txt
+hypit_state.json
+
+# ---------- 生成物 / 大文件 ----------
+mv_work/
+mv_tasks/
+*.mp4
+*.mp3
+*.wav
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# ---------- 编辑器 / 系统 ----------
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini

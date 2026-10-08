@@ -1,0 +1,6 @@
+{
+  "_说明": "复制本文件为 llm_api_config.json 并填入真实值；用于提示词增强等需要大模型的功能。llm_api_config.json 不入版本控制。任何 OpenAI 兼容接口都可用（改 base_url 即可）。",
+  "base_url": "https://api.deepseek.com/v1",
+  "api_key": "sk-你的APIKey",
+  "model": "deepseek-chat"
+}

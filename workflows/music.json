@@ -1,0 +1,116 @@
+{
+  "1": {
+    "class_type": "MiniMaxMusic3StylePreset",
+    "inputs": {
+      "曲风": "国语抒情",
+      "人声性别": "自动（用预设原本人声）",
+      "追加描述": ""
+    }
+  },
+  "2": {
+    "class_type": "MiniMaxMusic3ArchivePrefix",
+    "inputs": {
+      "曲风名": ["1", 1]
+    }
+  },
+  "3": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "minimax_music3_text_encoder_pruned_int8_convrot.safetensors",
+      "type": "minimax",
+      "device": "default"
+    }
+  },
+  "4": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "minimax_music3_dit_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    }
+  },
+  "5": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "minimax_music3_dav.safetensors"
+    }
+  },
+  "6": {
+    "class_type": "SeedNode",
+    "inputs": {
+      "seed": 0
+    }
+  },
+  "7": {
+    "class_type": "PrimitiveString",
+    "inputs": {
+      "value": "[Intro]\n\n[Verse]\n\n[Chorus]\n\n[Outro]\n"
+    }
+  },
+  "9": {
+    "class_type": "MiniMaxMusic3TextEncode",
+    "inputs": {
+      "clip": ["3", 0],
+      "caption": ["1", 0],
+      "lyrics": ["7", 0],
+      "seed": ["6", 0],
+      "max_duration": 120.0,
+      "cfg_scale": 1.7,
+      "top_k": 50
+    }
+  },
+  "10": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": ["9", 0]
+    }
+  },
+  "11": {
+    "class_type": "EmptyMiniMaxMusic3LatentAudio",
+    "inputs": {
+      "seconds": ["9", 1],
+      "batch_size": 1
+    }
+  },
+  "12": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["4", 0],
+      "positive": ["9", 0],
+      "negative": ["10", 0],
+      "latent_image": ["11", 0],
+      "seed": ["6", 0],
+      "steps": 30,
+      "cfg": 1.7,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1.0
+    }
+  },
+  "13": {
+    "class_type": "VAEDecodeAudioTiled",
+    "inputs": {
+      "samples": ["12", 0],
+      "vae": ["5", 0],
+      "tile_size": 1536,
+      "overlap": 64
+    }
+  },
+  "14": {
+    "class_type": "SaveAudioAdvanced",
+    "inputs": {
+      "audio": ["13", 0],
+      "filename_prefix": ["2", 0],
+      "format": "mp3",
+      "format.quality": "V0"
+    }
+  },
+  "15": {
+    "class_type": "MiniMaxMusic3SaveInfo",
+    "inputs": {
+      "曲风名": ["1", 1],
+      "caption": ["1", 0],
+      "歌词": ["7", 0],
+      "seed": ["6", 0]
+    }
+  }
+}

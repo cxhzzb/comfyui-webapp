@@ -1,0 +1,54 @@
+{
+  "lanes": [
+    {
+      "id": "local",
+      "name": "本地 4070S",
+      "base_url": "http://127.0.0.1:8188",
+      "enabled": true,
+      "models": {},
+      "params": {}
+    },
+    {
+      "id": "cloud1",
+      "name": "云端 5090#1",
+      "base_url": "http://127.0.0.1:18188",
+      "enabled": true,
+      "models": {
+        "unet_t2v": "Minimax_H3/minimax_h3_fl2va_pruned_fp8_scaled.safetensors",
+        "unet_i2v": "Minimax_H3/minimax_h3_fl2va_pruned_fp8_scaled.safetensors",
+        "unet_fl2v": "Minimax_H3/minimax_h3_fl2va_pruned_fp8_scaled.safetensors",
+        "unet_r2v": "Minimax_H3/minimax_h3_ref2va_pruned_fp8_scaled.safetensors",
+        "clip": "qwen3vl_32b_h3_ultra_uncensored_heretic_int8_convrot.safetensors",
+        "lora": "",
+        "lora_quadview": "Krea2-四视图QuadView_krea2_v1.safetensors",
+        "unet_quadview": "Krea2/krea2_turbo_fp8_scaled.safetensors",
+        "video_vae": "minimax_h3_video_vae_fp16.safetensors",
+        "audio_vae": "minimax_h3_audio_vae_fp32.safetensors"
+      },
+      "model_options": {
+        "unet_t2v": [
+          "Minimax_H3/minimax_h3_fl2va_pruned_fp8_scaled.safetensors"
+        ],
+        "unet_i2v": [
+          "Minimax_H3/minimax_h3_fl2va_pruned_fp8_scaled.safetensors"
+        ],
+        "unet_fl2v": [
+          "Minimax_H3/minimax_h3_fl2va_pruned_fp8_scaled.safetensors"
+        ],
+        "unet_r2v": [
+          "Minimax_H3/minimax_h3_ref2va_pruned_fp8_scaled.safetensors"
+        ]
+      },
+      "params": {
+        "steps": {
+          "t2v": 30,
+          "i2v": 30,
+          "fl2v": 30,
+          "r2v": 30,
+          "quadview": 10
+        },
+        "lora_strength": 0
+      }
+    }
+  ]
+}

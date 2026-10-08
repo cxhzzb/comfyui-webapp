@@ -1,0 +1,87 @@
+{
+  "240": {
+    "class_type": "TE_prompt_text",
+    "inputs": {
+      "text": "一个女孩在雨中跳舞",
+      "reference_labels": "<Picture 1>"
+    }
+  },
+  "253": {
+    "class_type": "TE_H3_Prompt_Enhancer",
+    "inputs": {
+      "输入提示词": [
+        "240",
+        0
+      ],
+      "任务类型": "首帧图生视频(I2VA)",
+      "视频时长": 10,
+      "参考素材说明": "<Picture 1>",
+      "增强方式": "本地模板",
+      "api_key": "",
+      "api_base_url": "",
+      "model": "",
+      "max_output_tokens": 4096,
+      "temperature": 0.6,
+      "timeout_s": 300,
+      "绕过代理": false
+    }
+  },
+  "254": {
+    "class_type": "QwenTE_ModelLoader",
+    "inputs": {
+      "模型系列": "Qwen3.5-VL",
+      "主模型": "Qwen3.5-4B-Q4_K_M.gguf",
+      "视觉投影mmproj": "Qwen3.5-4B-mmproj-BF16.gguf",
+      "启用思考": false,
+      "保留历史think": false,
+      "上下文长度": 23296,
+      "GPU层数": -1,
+      "KV缓存K类型": "默认(F16)",
+      "KV缓存V类型": "默认(F16)",
+      "MoE专家上CPU": false,
+      "前N层专家上CPU": 0,
+      "Qwen3.8推理强度": "xhigh",
+      "MTP推测解码": "关闭",
+      "MTP草稿token数": 2,
+      "Flash Attention": "不开启",
+      "MTP草稿模型": "无"
+    }
+  },
+  "252": {
+    "class_type": "QwenTE_ImageInfer",
+    "inputs": {
+      "qwen模型": [
+        "254",
+        0
+      ],
+      "输入模式": "文本",
+      "提示词": [
+        "253",
+        1
+      ],
+      "系统提示词": "",
+      "最多帧数": 24,
+      "最大边长": 1024,
+      "最大生成token": 4096,
+      "温度": 0.7,
+      "top_p": 0.9,
+      "top_k": 20,
+      "重复惩罚": 1.0,
+      "频率惩罚": 0.0,
+      "存在惩罚": 0.0,
+      "seed": 372220995635871,
+      "输出think块": false,
+      "生成后自动卸载模型": true
+    }
+  },
+  "239": {
+    "class_type": "TE_text_display",
+    "inputs": {
+      "text": "",
+      "input_text": [
+        "252",
+        0
+      ]
+    }
+  }
+}

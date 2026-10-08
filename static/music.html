@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HorseDance 1.0 · 想把我唱你听</title>
+<link rel="stylesheet" href="/static/style.css?v=20260907e">
+</head>
+<body>
+  <header class="topnav">
+    <div class="brand">HorseDance<span class="brand-ver">1.0</span></div>
+    <nav class="mode-switch" id="mode-switch"></nav>
+    <div class="nav-right">
+      <div class="secret-pad" id="secret-pad">
+        <button type="button" class="secret-btn" data-key="triangle" aria-label="三角形">△</button>
+        <button type="button" class="secret-btn" data-key="x" aria-label="X形">✕</button>
+        <button type="button" class="secret-btn" data-key="square" aria-label="正方形">□</button>
+        <button type="button" class="secret-btn" data-key="circle" aria-label="圆形">◯</button>
+      </div>
+      <a class="nav-link" href="/">← 模式选择</a>
+      <button class="btn secondary btn-small" id="btn-reset">重置本页</button>
+    </div>
+  </header>
+
+  <div class="perf-strip" id="perf-strip">
+    <span class="ps-item" title="CPU 使用率">🖥️ CPU <b id="ps-cpu">--</b></span>
+    <span class="ps-item" title="内存占用">🧠 内存 <b id="ps-mem">--</b></span>
+    <span class="ps-item" title="GPU 使用率">🎮 GPU <b id="ps-gpu">--</b></span>
+    <span class="ps-item" title="显存占用">💾 显存 <b id="ps-vram">--</b></span>
+    <button type="button" class="perf-free-btn" id="perf-free" title="释放内存与显存（有任务生成时自动跳过）">♻️ 释放</button>
+  </div>
+
+  <div class="layout">
+    <aside class="controls">
+      <h1 id="mode-name">想把我唱你听</h1>
+      <p class="mode-desc" id="mode-desc">选曲风、写词（或 AI 写词），生成带人声的完整歌曲</p>
+
+      <div class="panel" id="style-panel">
+        <h3>曲风</h3>
+        <div class="opt">
+          <label>曲风预设</label>
+          <select id="style"></select>
+        </div>
+        <div class="opt">
+          <label>人声性别</label>
+          <select id="gender"></select>
+        </div>
+      </div>
+
+      <div class="panel" id="lyrics-panel">
+        <h3>歌词</h3>
+        <div class="opt">
+          <label>歌曲主题（AI 写词用）</label>
+          <textarea id="theme" class="big-input" rows="3" placeholder="一句话说清这首歌写什么，例如：深夜加班的人在便利店买了一罐热咖啡，想起很久没联系的朋友"></textarea>
+        </div>
+        <div class="row">
+          <button class="btn secondary" id="btn-lyrics">✨ AI 写词</button>
+          <span class="status-line hidden" id="lyrics-status"></span>
+        </div>
+        <div class="adv-panel" id="lyrics-opts-panel">
+          <button class="adv-head" id="lyrics-opts-head">
+            <span>写词选项</span>
+            <span class="adv-arrow" id="lyrics-opts-arrow">▾</span>
+          </button>
+          <div class="adv-body hidden" id="lyrics-opts-body">
+            <div class="adv-ctrl">
+              <label>歌词语言</label>
+              <select id="opt-lang"></select>
+            </div>
+            <div class="adv-ctrl">
+              <label>歌曲长度（影响歌词篇幅）</label>
+              <select id="opt-length"></select>
+            </div>
+            <div class="adv-ctrl">
+              <label>副歌写法</label>
+              <select id="opt-chorus"></select>
+            </div>
+            <div class="adv-ctrl">
+              <label>必须出现的词（可留空）</label>
+              <textarea id="opt-keywords" class="big-input" rows="2" placeholder="想让歌里出现的词，用顿号或逗号分隔"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="opt" style="margin-top:14px">
+          <label>歌词（可手写，也可用上面的 AI 写词填入）</label>
+          <textarea id="lyrics" rows="12" placeholder="[Verse]&#10;在这里写主歌…&#10;&#10;[Chorus]&#10;在这里写副歌…"></textarea>
+          <div class="hint-line">段落用方括号标记控制：[Intro] [Verse] [Chorus] [Bridge] [Outro]，标记不会被唱出来</div>
+        </div>
+      </div>
+
+      <div class="panel" id="opts-panel">
+        <h3>可选参数</h3>
+        <div class="opt-grid">
+          <div class="opt">
+            <label>歌曲长度（秒）</label>
+            <div class="range-row">
+              <input type="range" id="duration" min="30" max="300" step="10">
+              <span class="range-val" id="duration-val"></span>
+            </div>
+          </div>
+          <div class="opt">
+            <label>种子</label>
+            <select id="seed-mode" style="margin-bottom:6px">
+              <option value="random" selected>每次随机</option>
+              <option value="draw">随机抽取</option>
+              <option value="last">固定上次</option>
+            </select>
+            <div style="display:flex;gap:6px">
+              <input type="number" id="seed" value="-1" step="1" style="flex:1" disabled>
+              <button type="button" class="btn secondary btn-small hidden" id="btn-seed-draw" title="重新抽取一个种子">🎲</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="row" style="margin-top:0">
+          <button class="btn btn-primary" id="btn-generate">生成歌曲</button>
+          <button class="btn secondary hidden" id="btn-cancel">取消</button>
+          <span class="status-line" id="gen-status"></span>
+        </div>
+      </div>
+
+      <div class="adv-panel" id="adv-panel">
+        <button class="adv-head" id="adv-head">
+          <span>高级参数</span>
+          <span class="adv-arrow" id="adv-arrow">▾</span>
+        </button>
+        <div class="adv-body hidden" id="adv-body">
+          <div class="adv-ctrl">
+            <label>采样步数<span class="adv-val" id="adv-steps-val"></span></label>
+            <input type="range" id="adv-steps">
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="preview" id="preview">
+      <div class="danmaku" id="danmaku"></div>
+      <div class="preview-empty" id="preview-empty">
+        <div class="preview-empty-icon">🎵</div>
+        <p>生成的歌曲将显示在这里</p>
+      </div>
+      <div class="preview-progress hidden" id="progress-wrap">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-text" id="progress-text"></div>
+      </div>
+      <div class="result-media" id="result"></div>
+      <div class="preview-elapsed hidden" id="elapsed-line"></div>
+    </main>
+
+    <aside class="history" id="history-panel">
+      <div class="history-head">
+        <h3>生成历史</h3>
+        <button class="btn secondary btn-small" id="btn-clear-history">清空</button>
+      </div>
+      <div class="history-empty" id="history-empty">暂无生成记录</div>
+      <div class="history-list" id="history-list"></div>
+    </aside>
+  </div>
+<script src="/static/music.js?v=20260929d"></script>
+<script src="/static/secret.js?v=20260813i"></script>
+</body>
+</html>

@@ -1,0 +1,662 @@
+{
+  "t2v": {
+    "file": "t2v.json",
+    "prompt": {
+      "node": "194",
+      "input": "prompt"
+    },
+    "images": [],
+    "seed": {
+      "node": "211",
+      "input": "seed"
+    },
+    "seconds": {
+      "node": "199",
+      "input": "value"
+    },
+    "ratio": {
+      "node": "200",
+      "input": "aspect_ratio"
+    },
+    "outputs": {
+      "video_node": "193"
+    },
+    "advanced": {
+      "steps": {
+        "node": "196",
+        "input": "steps",
+        "min": 4,
+        "max": 16
+      },
+      "megapixels": {
+        "node": "200",
+        "input": "megapixels",
+        "min": 0.1,
+        "max": 1.0,
+        "step": 0.1
+      },
+      "clip": {
+        "node": "204",
+        "input": "clip_name"
+      },
+      "lora": {
+        "node": "205",
+        "input": "lora_name",
+        "strength_input": "strength_model"
+      },
+      "unet": {
+        "node": "214",
+        "input": "unet_name",
+        "options": [
+          "Minimax_H3\\minimax_h3_fl2va_pruned_int8_convrot.safetensors"
+        ]
+      },
+      "video_vae": {
+        "node": "215",
+        "input": "vae_name"
+      },
+      "audio_vae": {
+        "node": "203",
+        "input": "vae_name"
+      }
+    }
+  },
+  "i2v": {
+    "file": "i2v.json",
+    "prompt": {
+      "node": "133",
+      "input": "prompt"
+    },
+    "images": [
+      {
+        "node": "114",
+        "input": "image",
+        "label": "首帧图片"
+      }
+    ],
+    "seed": {
+      "node": "186",
+      "input": "seed"
+    },
+    "seconds": {
+      "node": "135",
+      "input": "value"
+    },
+    "ratio": {
+      "node": "115",
+      "input": "aspect_ratio"
+    },
+    "outputs": {
+      "video_node": "189"
+    },
+    "advanced": {
+      "steps": {
+        "node": "126",
+        "input": "steps",
+        "min": 4,
+        "max": 16
+      },
+      "megapixels": {
+        "node": "115",
+        "input": "megapixels",
+        "min": 0.1,
+        "max": 1.0,
+        "step": 0.1
+      },
+      "clip": {
+        "node": "130",
+        "input": "clip_name"
+      },
+      "lora": {
+        "node": "140",
+        "input": "lora_name",
+        "strength_input": "strength_model"
+      },
+      "unet": {
+        "node": "129",
+        "input": "unet_name",
+        "options": [
+          "Minimax_H3\\minimax_h3_fl2va_pruned_int8_convrot.safetensors"
+        ]
+      },
+      "video_vae": {
+        "node": "121",
+        "input": "vae_name"
+      },
+      "audio_vae": {
+        "node": "122",
+        "input": "vae_name"
+      }
+    }
+  },
+  "fl2v": {
+    "file": "fl2v.json",
+    "prompt": {
+      "node": "259",
+      "input": "prompt"
+    },
+    "images": [
+      {
+        "node": "275",
+        "input": "image",
+        "label": "首帧图片"
+      },
+      {
+        "node": "282",
+        "input": "image",
+        "label": "尾帧图片"
+      }
+    ],
+    "seed": {
+      "node": "272",
+      "input": "seed"
+    },
+    "seconds": {
+      "node": "270",
+      "input": "value"
+    },
+    "ratio": {
+      "node": "265",
+      "input": "aspect_ratio"
+    },
+    "outputs": {
+      "video_node": "258"
+    },
+    "advanced": {
+      "steps": {
+        "node": "261",
+        "input": "steps",
+        "min": 4,
+        "max": 16
+      },
+      "megapixels": {
+        "node": "265",
+        "input": "megapixels",
+        "min": 0.1,
+        "max": 1.0,
+        "step": 0.1
+      },
+      "clip": {
+        "node": "263",
+        "input": "clip_name"
+      },
+      "lora": {
+        "node": "269",
+        "input": "lora_name",
+        "strength_input": "strength_model"
+      },
+      "unet": {
+        "node": "276",
+        "input": "unet_name",
+        "options": [
+          "Minimax_H3\\minimax_h3_fl2va_pruned_int8_convrot.safetensors"
+        ]
+      },
+      "video_vae": {
+        "node": "277",
+        "input": "vae_name"
+      },
+      "audio_vae": {
+        "node": "262",
+        "input": "vae_name"
+      }
+    }
+  },
+  "r2v": {
+    "file": "r2v.json",
+    "prompt": {
+      "node": "316",
+      "input": "prompt"
+    },
+    "images": [
+      {
+        "node": "308",
+        "input": "image",
+        "label": "参考图片1"
+      },
+      {
+        "node": "295",
+        "input": "image",
+        "label": "参考图片2"
+      }
+    ],
+    "seed": {
+      "node": "303",
+      "input": "seed"
+    },
+    "seconds": {
+      "node": "292",
+      "input": "value"
+    },
+    "ratio": {
+      "node": "290",
+      "input": "aspect_ratio"
+    },
+    "optional_slots": [
+      {
+        "label": "参考图3（可选）",
+        "kind": "image",
+        "wire": {
+          "node": "316",
+          "input": "ref_images.ref_image_2"
+        }
+      },
+      {
+        "label": "参考图4（可选）",
+        "kind": "image",
+        "wire": {
+          "node": "316",
+          "input": "ref_images.ref_image_3"
+        }
+      },
+      {
+        "label": "参考图5（可选）",
+        "kind": "image",
+        "wire": {
+          "node": "316",
+          "input": "ref_images.ref_image_4"
+        }
+      },
+      {
+        "label": "参考图6（可选）",
+        "kind": "image",
+        "wire": {
+          "node": "316",
+          "input": "ref_images.ref_image_5"
+        }
+      },
+      {
+        "label": "参考图7（可选）",
+        "kind": "image",
+        "wire": {
+          "node": "316",
+          "input": "ref_images.ref_image_6"
+        }
+      },
+      {
+        "label": "参考图8（可选）",
+        "kind": "image",
+        "wire": {
+          "node": "316",
+          "input": "ref_images.ref_image_7"
+        }
+      },
+      {
+        "label": "参考视频（可选）",
+        "kind": "video",
+        "wire": {
+          "node": "316",
+          "input": "ref_videos.ref_video_0"
+        }
+      }
+    ],
+    "outputs": {
+      "video_node": "285"
+    },
+    "advanced": {
+      "steps": {
+        "node": "288",
+        "input": "steps",
+        "min": 4,
+        "max": 16
+      },
+      "megapixels": {
+        "node": "290",
+        "input": "megapixels",
+        "min": 0.1,
+        "max": 1.0,
+        "step": 0.1
+      },
+      "clip": {
+        "node": "298",
+        "input": "clip_name"
+      },
+      "lora": {
+        "node": "300",
+        "input": "lora_name",
+        "strength_input": "strength_model"
+      },
+      "unet": {
+        "node": "305",
+        "input": "unet_name",
+        "options": [
+          "Minimax_H3\\minimax_h3_ref2va_pruned_int8_convrot.safetensors"
+        ]
+      },
+      "video_vae": {
+        "node": "306",
+        "input": "vae_name"
+      },
+      "audio_vae": {
+        "node": "297",
+        "input": "vae_name"
+      }
+    }
+  },
+  "quadview": {
+    "file": "quadview.json",
+    "prompt": {
+      "node": "24",
+      "input": "prompt"
+    },
+    "images": [
+      {
+        "node": "17",
+        "input": "image",
+        "label": "人物参考图"
+      }
+    ],
+    "seed": {
+      "node": "14",
+      "input": "seed"
+    },
+    "outputs": {
+      "image_node": "5"
+    },
+    "advanced": {
+      "steps": {
+        "node": "14",
+        "input": "steps",
+        "min": 4,
+        "max": 20
+      },
+      "lora_strength": {
+        "node": "16",
+        "input": "strength_model"
+      },
+      "unet": {
+        "node": "25",
+        "input": "unet_name",
+        "inject_only": true
+      },
+      "lora": {
+        "node": "16",
+        "input": "lora_name",
+        "strength_input": "strength_model",
+        "inject_only": true
+      }
+    }
+  },
+  "qwen_t2i": {
+    "file": "qwen_t2i.json",
+    "prompt": {
+      "node": "522",
+      "input": "prompt"
+    },
+    "images": [],
+    "seed": {
+      "node": "524",
+      "input": "seed"
+    },
+    "ratio": {
+      "node": "512",
+      "input": "aspect_ratio"
+    },
+    "outputs": {
+      "image_node": "508"
+    },
+    "advanced": {
+      "steps": {
+        "node": "515",
+        "input": "steps",
+        "min": 4,
+        "max": 50
+      },
+      "megapixels": {
+        "node": "512",
+        "input": "megapixels",
+        "min": 0.5,
+        "max": 2.0,
+        "step": 0.1
+      },
+      "unet": {
+        "node": "523",
+        "input": "unet_name"
+      },
+      "clip": {
+        "node": "518",
+        "input": "clip_name"
+      }
+    }
+  },
+  "qwen_i2i": {
+    "file": "qwen_i2i.json",
+    "prompt": {
+      "node": "497",
+      "input": "prompt"
+    },
+    "images": [],
+    "seed": {
+      "node": "502",
+      "input": "seed"
+    },
+    "ratio": {
+      "node": "13",
+      "input": "aspect_ratio"
+    },
+    "optional_slots": [
+      {
+        "label": "参考图1（可选）",
+        "kind": "image",
+        "via": {
+          "class_type": "ImageScaleToTotalPixels",
+          "image_input": "image",
+          "inputs": {
+            "upscale_method": "lanczos",
+            "megapixels": "$megapixels",
+            "resolution_steps": 32
+          }
+        },
+        "wire": {
+          "node": "497",
+          "input": "images.image_1"
+        }
+      },
+      {
+        "label": "参考图2（可选）",
+        "kind": "image",
+        "via": {
+          "class_type": "ImageScaleToTotalPixels",
+          "image_input": "image",
+          "inputs": {
+            "upscale_method": "lanczos",
+            "megapixels": 1,
+            "resolution_steps": 32
+          }
+        },
+        "wire": {
+          "node": "497",
+          "input": "images.image_2"
+        }
+      },
+      {
+        "label": "参考图3（可选）",
+        "kind": "image",
+        "via": {
+          "class_type": "ImageScaleToTotalPixels",
+          "image_input": "image",
+          "inputs": {
+            "upscale_method": "lanczos",
+            "megapixels": 1,
+            "resolution_steps": 32
+          }
+        },
+        "wire": {
+          "node": "497",
+          "input": "images.image_3"
+        }
+      },
+      {
+        "label": "参考图4（可选）",
+        "kind": "image",
+        "via": {
+          "class_type": "ImageScaleToTotalPixels",
+          "image_input": "image",
+          "inputs": {
+            "upscale_method": "lanczos",
+            "megapixels": 1,
+            "resolution_steps": 32
+          }
+        },
+        "wire": {
+          "node": "497",
+          "input": "images.image_4"
+        }
+      },
+      {
+        "label": "参考图5（可选）",
+        "kind": "image",
+        "via": {
+          "class_type": "ImageScaleToTotalPixels",
+          "image_input": "image",
+          "inputs": {
+            "upscale_method": "lanczos",
+            "megapixels": 1,
+            "resolution_steps": 32
+          }
+        },
+        "wire": {
+          "node": "497",
+          "input": "images.image_5"
+        }
+      },
+      {
+        "label": "参考图6（可选）",
+        "kind": "image",
+        "via": {
+          "class_type": "ImageScaleToTotalPixels",
+          "image_input": "image",
+          "inputs": {
+            "upscale_method": "lanczos",
+            "megapixels": 1,
+            "resolution_steps": 32
+          }
+        },
+        "wire": {
+          "node": "497",
+          "input": "images.image_6"
+        }
+      },
+      {
+        "label": "参考图7（可选）",
+        "kind": "image",
+        "via": {
+          "class_type": "ImageScaleToTotalPixels",
+          "image_input": "image",
+          "inputs": {
+            "upscale_method": "lanczos",
+            "megapixels": 1,
+            "resolution_steps": 32
+          }
+        },
+        "wire": {
+          "node": "497",
+          "input": "images.image_7"
+        }
+      },
+      {
+        "label": "参考图8（可选）",
+        "kind": "image",
+        "via": {
+          "class_type": "ImageScaleToTotalPixels",
+          "image_input": "image",
+          "inputs": {
+            "upscale_method": "lanczos",
+            "megapixels": 1,
+            "resolution_steps": 32
+          }
+        },
+        "wire": {
+          "node": "497",
+          "input": "images.image_8"
+        }
+      }
+    ],
+    "edit_switch": {
+      "node": "482",
+      "input": "switch"
+    },
+    "outputs": {
+      "image_node": "487"
+    },
+    "advanced": {
+      "steps": {
+        "node": "481",
+        "input": "steps",
+        "min": 4,
+        "max": 50
+      },
+      "megapixels": {
+        "node": "13",
+        "input": "megapixels",
+        "min": 0.5,
+        "max": 2.0,
+        "step": 0.1
+      },
+      "unet": {
+        "node": "476",
+        "input": "unet_name"
+      },
+      "clip": {
+        "node": "477",
+        "input": "clip_name"
+      }
+    }
+  },
+  "music": {
+    "file": "music.json",
+    "style": {
+      "node": "1",
+      "input": "曲风"
+    },
+    "gender": {
+      "node": "1",
+      "input": "人声性别"
+    },
+    "lyrics": {
+      "node": "7",
+      "input": "value"
+    },
+    "duration": {
+      "node": "9",
+      "input": "max_duration"
+    },
+    "seed": {
+      "node": "6",
+      "input": "seed"
+    },
+    "outputs": {
+      "audio_node": "14"
+    },
+    "advanced": {
+      "steps": {
+        "node": "12",
+        "input": "steps",
+        "min": 4,
+        "max": 50
+      }
+    }
+  },
+  "enhance": {
+    "file": "enhance.json",
+    "prompt": {
+      "node": "240",
+      "input": "text"
+    },
+    "task_type": {
+      "node": "253",
+      "input": "任务类型"
+    },
+    "seconds": {
+      "node": "253",
+      "input": "视频时长"
+    },
+    "seed": {
+      "node": "252",
+      "input": "seed"
+    },
+    "outputs": {
+      "text_node": "239"
+    }
+  }
+}

@@ -1,0 +1,3 @@
+# 可选：卡拉OK 歌词对齐（karaoke_align.py 所需，依赖较大，可单独装在一个虚拟环境里）
+# 装好后在 config.json 里把 karaoke_python 指向该环境的 python.exe
+faster-whisper>=1.0
